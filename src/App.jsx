@@ -39,7 +39,7 @@ export default function App() {
           <div style={{ background: 'var(--accent-gradient)', padding: '8px', borderRadius: '8px', display: 'flex' }}>
             <Zap size={24} color="white" />
           </div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Quantum <span className="text-gradient">AI</span> Builder</h1>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Quantum <span className="text-gradient">Studio</span></h1>
         </div>
         {apiKey && (
           <button

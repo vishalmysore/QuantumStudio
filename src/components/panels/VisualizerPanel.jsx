@@ -123,27 +123,40 @@ function drawCircuit(ctx, W, H, steps, visibleGateCount) {
                     controls.forEach(c => {
                         ctx.fillStyle = color;
                         ctx.beginPath();
-                        ctx.arc(x, PT + c * qubitSpacing, 4, 0, Math.PI * 2);
+                        ctx.arc(x, PT + c * qubitSpacing, 5, 0, Math.PI * 2);
                         ctx.fill();
                     });
                 }
 
-                // Draw Gate Box
+                // Draw Gate Box or Special Target
                 targets.forEach(t => {
                     const y = PT + t * qubitSpacing;
-                    ctx.fillStyle = color;
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = color;
-                    ctx.beginPath();
-                    ctx.roundRect(x - 16, y - 16, 32, 32, 6);
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
 
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 13px Inter';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(step.gate, x, y);
+                    if (step.gate === 'CZ' && controls.length > 0) {
+                        ctx.fillStyle = color;
+                        ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fill();
+                    } else if ((step.gate === 'CX' || step.gate === 'CNOT') && controls.length > 0) {
+                        ctx.strokeStyle = color; ctx.lineWidth = 2;
+                        ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x - 7, y); ctx.lineTo(x + 7, y);
+                        ctx.moveTo(x, y - 7); ctx.lineTo(x, y + 7);
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = color;
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = color;
+                        ctx.beginPath();
+                        ctx.roundRect(x - 16, y - 16, 32, 32, 6);
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        ctx.fillStyle = 'white';
+                        ctx.font = 'bold 13px Inter';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(step.gate, x, y);
+                    }
                 });
             }
         });

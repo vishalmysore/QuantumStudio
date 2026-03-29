@@ -123,13 +123,16 @@ function generateGrover(n, target) {
     // Initial superposition
     for (let i = 0; i < n; i++) steps.push({ type: 'gate', gate: 'H', targets: [i] });
 
-    // Oracle for |11> (example)
-    steps.push({ type: 'gate', gate: 'Z', targets: [0] }); // Phase flip simplified
+    // Oracle for |11> (example) - Must be CZ!
+    steps.push({ type: 'gate', gate: 'CZ', controls: [0], targets: [1] });
 
     // Diffusion
     for (let i = 0; i < n; i++) steps.push({ type: 'gate', gate: 'H', targets: [i] });
     for (let i = 0; i < n; i++) steps.push({ type: 'gate', gate: 'X', targets: [i] });
-    steps.push({ type: 'gate', gate: 'Z', targets: [n - 1] });
+
+    // Controlled-Z for diffusion flip
+    steps.push({ type: 'gate', gate: 'CZ', controls: [0], targets: [1] });
+
     for (let i = 0; i < n; i++) steps.push({ type: 'gate', gate: 'X', targets: [i] });
     for (let i = 0; i < n; i++) steps.push({ type: 'gate', gate: 'H', targets: [i] });
 
@@ -137,6 +140,6 @@ function generateGrover(n, target) {
 
     return {
         steps,
-        explanation: `Grover's Search for ${n} qubits. Efficiently finding the target state ${target} through amplitude amplification.`
+        explanation: `Grover's Search for ${n} qubits. CZ gates are used as oracles to mark the target state ${target} by flipping its phase, followed by amplitude amplification.`
     };
 }

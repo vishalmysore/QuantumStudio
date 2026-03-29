@@ -21,6 +21,10 @@ export function buildQASM(steps) {
                 const c = step.controls?.[0] ?? 0;
                 const t = step.targets?.[0] ?? 1;
                 qasm += `cx q[${c}], q[${t}];\n`;
+            } else if (gate === "cz") {
+                const c = step.controls?.[0] ?? 0;
+                const t = step.targets?.[0] ?? 1;
+                qasm += `cz q[${c}], q[${t}];\n`;
             } else if (["rx", "ry", "rz"].includes(gate) && step.angle !== undefined) {
                 const t = step.targets?.[0] ?? 0;
                 qasm += `${gate}(${step.angle}) q[${t}];\n`;
@@ -68,6 +72,13 @@ export function parseQASM(qasm) {
         const cxMatch = clean.match(/^cx\s+q\[(\d+)\],\s*q\[(\d+)\]/i);
         if (cxMatch) {
             steps.push({ type: 'gate', gate: 'CNOT', controls: [parseInt(cxMatch[1])], targets: [parseInt(cxMatch[2])] });
+            return;
+        }
+
+        // CZ
+        const czMatch = clean.match(/^cz\s+q\[(\d+)\],\s*q\[(\d+)\]/i);
+        if (czMatch) {
+            steps.push({ type: 'gate', gate: 'CZ', controls: [parseInt(czMatch[1])], targets: [parseInt(czMatch[2])] });
             return;
         }
 

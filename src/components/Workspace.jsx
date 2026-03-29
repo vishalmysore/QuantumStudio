@@ -7,6 +7,7 @@ import { buildQASM } from '../services/converter';
 
 export default function Workspace({ apiKey, endpoint, model, useProxy }) {
     const [steps, setSteps] = useState([]);
+    const [explanation, setExplanation] = useState('');
     const [qasm, setQasm] = useState('');
     const [error, setError] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -16,8 +17,11 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
         setError(null);
         try {
             // 1. Send natural language to LLM
-            const parsedSteps = await parseCircuitPrompt(prompt, apiKey, endpoint, model, useProxy);
+            const result = await parseCircuitPrompt(prompt, apiKey, endpoint, model, useProxy);
+            const { steps: parsedSteps, explanation: parsedExplanation } = result;
+
             setSteps(parsedSteps);
+            setExplanation(parsedExplanation);
 
             // 2. Convert steps to OpenQASM
             const compiledQasm = buildQASM(parsedSteps);
@@ -26,6 +30,7 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
             console.error(err);
             setError(err.message);
             setSteps([]);
+            setExplanation('');
             setQasm('');
         } finally {
             setIsGenerating(false);
@@ -48,6 +53,7 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
             />
             <ExplanationPanel
                 steps={steps}
+                explanation={explanation}
                 error={error}
             />
             <VisualizerPanel

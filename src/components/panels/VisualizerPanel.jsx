@@ -35,8 +35,6 @@ function drawCircuit(ctx, W, H, steps, visibleGateCount) {
     const PL = 72, PR = 32, PT = 50, PB = 30;
     const qubitSpacing = numQubits <= 1 ? H * 0.4 : Math.min(90, (H - PT - PB) / (numQubits - 1));
     const usableW = W - PL - PR;
-    const gateSpacing = Math.min(90, usableW / Math.max(gateSteps.length + 0.5, 2));
-    const startX = PL + (usableW - gateSteps.length * gateSpacing) / 2;
 
     // Wires + labels
     for (let q = 0; q < numQubits; q++) {
@@ -52,59 +50,104 @@ function drawCircuit(ctx, W, H, steps, visibleGateCount) {
         ctx.setLineDash([]);
         ctx.beginPath();
         ctx.moveTo(PL - 2, y);
-        ctx.lineTo(Math.min(startX + gateSteps.length * gateSpacing + 20, W - PR), y);
+        ctx.lineTo(W - PR, y);
         ctx.stroke();
     }
 
-    // Gates
-    const drawCount = visibleGateCount == null ? gateSteps.length : visibleGateCount;
-    for (let i = 0; i < Math.min(drawCount, gateSteps.length); i++) {
-        const step = gateSteps[i];
-        const x = startX + i * gateSpacing + gateSpacing / 2;
+    // 1. Group gates into horizontal Layers (Circuit Depth logic)
+    const layers = [];
+    const qubitOccupiedUntil = new Array(numQubits).fill(0);
 
-        if ((step.gate === 'CNOT' || step.gate === 'CX') && step.controls && step.targets) {
-            const cy = PT + step.controls[0] * qubitSpacing;
-            const ty = PT + step.targets[0] * qubitSpacing;
-            const col = GATE_COLORS['CNOT'];
-            ctx.strokeStyle = col; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x, ty); ctx.stroke();
-            ctx.fillStyle = col;
-            ctx.beginPath(); ctx.arc(x, cy, 7, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = col; ctx.lineWidth = 2.5;
-            ctx.beginPath(); ctx.arc(x, ty, 14, 0, Math.PI * 2); ctx.stroke();
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x - 10, ty); ctx.lineTo(x + 10, ty);
-            ctx.moveTo(x, ty - 10); ctx.lineTo(x, ty + 10);
-            ctx.stroke();
-        } else if (step.type === 'measure') {
-            const targets = step.targets || Array.from({ length: numQubits }, (_, k) => k);
-            for (const t of targets) {
-                const y = PT + t * qubitSpacing;
-                ctx.fillStyle = '#1e293b';
-                roundRect(ctx, x - 18, y - 15, 36, 30, 5); ctx.fill();
-                ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
-                roundRect(ctx, x - 18, y - 15, 36, 30, 5); ctx.stroke();
+    gateSteps.forEach((step) => {
+        const involvedQubits = [...(step.targets || []), ...(step.controls || [])];
+        // Find first layer where all involved qubits are free
+        let layerIdx = 0;
+        involvedQubits.forEach(q => {
+            layerIdx = Math.max(layerIdx, qubitOccupiedUntil[q]);
+        });
+
+        if (!layers[layerIdx]) layers[layerIdx] = [];
+        layers[layerIdx].push(step);
+
+        // Mark these qubits as occupied for this layer and all future
+        involvedQubits.forEach(q => {
+            qubitOccupiedUntil[q] = layerIdx + 1;
+        });
+    });
+
+    const totalLayers = layers.length;
+    const gateSpacing = Math.min(90, usableW / Math.max(totalLayers + 0.5, 2));
+    const startX = PL + (usableW - totalLayers * gateSpacing) / 2;
+
+    // 2. Draw Gates by Layer
+    let currentDrawCount = visibleGateCount == null ? gateSteps.length : visibleGateCount;
+
+    layers.forEach((layerGates, lIdx) => {
+        const x = startX + lIdx * gateSpacing + gateSpacing / 2;
+
+        layerGates.forEach(step => {
+            if (currentDrawCount <= 0) return;
+            currentDrawCount--;
+
+            if (step.type === 'measure') {
+                const y = PT + step.targets[0] * qubitSpacing;
                 ctx.strokeStyle = '#94a3b8';
-                ctx.beginPath(); ctx.arc(x, y + 5, 9, Math.PI, 0); ctx.stroke();
-                ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(x, y + 5); ctx.lineTo(x + 7, y - 3); ctx.stroke();
+                ctx.fillStyle = '#1e293b';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - 12, y - 12, 24, 24);
+                ctx.fillRect(x - 12, y - 12, 24, 24);
+                // Meter icon
+                ctx.beginPath();
+                ctx.arc(x, y + 6, 10, Math.PI, 0);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y + 6);
+                ctx.lineTo(x + 6, y - 4);
+                ctx.stroke();
+            } else {
+                const targets = step.targets || [];
+                const controls = step.controls || [];
+                const color = GATE_COLORS[step.gate] || '#94a3b8';
+
+                // Draw Control Lines
+                if (controls.length > 0) {
+                    const minY = Math.min(...controls, ...targets) * qubitSpacing + PT;
+                    const maxY = Math.max(...controls, ...targets) * qubitSpacing + PT;
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x, minY);
+                    ctx.lineTo(x, maxY);
+                    ctx.stroke();
+
+                    controls.forEach(c => {
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.arc(x, PT + c * qubitSpacing, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+
+                // Draw Gate Box
+                targets.forEach(t => {
+                    const y = PT + t * qubitSpacing;
+                    ctx.fillStyle = color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = color;
+                    ctx.beginPath();
+                    ctx.roundRect(x - 16, y - 16, 32, 32, 6);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 13px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(step.gate, x, y);
+                });
             }
-        } else if (step.gate && step.targets) {
-            const col = GATE_COLORS[step.gate] || '#6366f1';
-            for (const t of step.targets) {
-                const y = PT + t * qubitSpacing;
-                ctx.fillStyle = col + '28';
-                roundRect(ctx, x - 18, y - 15, 36, 30, 5); ctx.fill();
-                ctx.strokeStyle = col; ctx.lineWidth = 2;
-                roundRect(ctx, x - 18, y - 15, 36, 30, 5); ctx.stroke();
-                ctx.font = 'bold 12px Inter,sans-serif';
-                ctx.fillStyle = col;
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(step.gate.length > 3 ? step.gate.slice(0, 2) : step.gate, x, y);
-            }
-        }
-    }
+        });
+    });
 }
 
 export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {

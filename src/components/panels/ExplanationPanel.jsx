@@ -1,7 +1,7 @@
-import { GitCommit, Copy, Check } from 'lucide-react';
+import { GitCommit, Copy, Check, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
-export default function ExplanationPanel({ steps = null, error = null }) {
+export default function ExplanationPanel({ steps = null, explanation = '', error = null }) {
     const [copied, setCopied] = useState(false);
 
     if (error) {
@@ -46,6 +46,28 @@ export default function ExplanationPanel({ steps = null, error = null }) {
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
                     The AI parsed your request into the following structured execution steps:
                 </p>
+
+                {explanation && (
+                    <div style={{
+                        background: 'rgba(139, 92, 246, 0.1)',
+                        border: '1px solid rgba(139, 92, 246, 0.3)',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        marginBottom: '20px',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{ position: 'absolute', top: '-10px', right: '-10px', opacity: 0.1 }}>
+                            <Sparkles size={60} color="var(--accent-primary)" />
+                        </div>
+                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--accent-primary)', marginBottom: '8px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            <Sparkles size={14} /> Scientific Insight
+                        </h4>
+                        <p style={{ fontSize: '0.95rem', lineHeight: '1.5', color: 'var(--text-primary)', position: 'relative', zIndex: 1, fontStyle: 'italic' }}>
+                            "{explanation}"
+                        </p>
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {steps.map((step, idx) => (

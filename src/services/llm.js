@@ -28,9 +28,14 @@ function getRoutingConfig(fullEndpoint, useProxy) {
 }
 
 export async function parseCircuitPrompt(prompt, apiKey, endpoint, model = "gpt-4o", useProxy = false) {
-    const systemPrompt = `You are a Ph.D. level Quantum Computing assistant. Your task is to accurately translate natural language into a structured JSON quantum circuit plan.
+    const systemPrompt = `You are a Ph.D. level Quantum Computing assistant. Your task is to accurately translate natural language into a structured JSON quantum circuit plan AND provide a scientific insight.
   
-ONLY output a valid JSON array of step objects. No markdown, no explanations.
+ONLY output a valid JSON object with matching the following schema. No markdown, no extra text.
+{
+  "steps": [ ...array of step objects... ],
+  "explanation": "A high-level sentence or two about what just happened in the circuit (e.g. 'You have now created an equal superposition of all 16 states simultaneously')."
+}
+
 Supported gates: H, X, Y, Z, CNOT, RX, RY, MEASURE.
 
 Scientific Accuracy Rules:
@@ -38,15 +43,18 @@ Scientific Accuracy Rules:
    - Grover's: Requires initial H-gates, an oracle (using X/CNOT/X pattern), and a diffusion operator (H, X, H-on-target, CNOT, H, X, H).
 2. ORACLES: Use X and CNOT gates to implement logical oracles.
 3. PROTOCOLS: For Bell states, always use H then CNOT.
-4. Always include an "init" element FIRST with the number of qubits needed.
+4. Always include an "init" element FIRST in the steps array with the number of qubits needed.
 
-Example (Bell State):
-[
-  {"type": "init", "qubits": 2},
-  {"type": "gate", "gate": "H", "targets": [0]},
-  {"type": "gate", "gate": "CNOT", "controls": [0], "targets": [1]},
-  {"type": "measure", "targets": [0, 1]}
-]
+Example:
+{
+  "steps": [
+    {"type": "init", "qubits": 2},
+    {"type": "gate", "gate": "H", "targets": [0]},
+    {"type": "gate", "gate": "CNOT", "controls": [0], "targets": [1]},
+    {"type": "measure", "targets": [0, 1]}
+  ],
+  "explanation": "You have created a Bell state (entanglement) where measuring one qubit instantly reveals the state of the other, regardless of distance."
+}
 
 Rules:
 - 0-indexed qubits.

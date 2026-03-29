@@ -30,17 +30,22 @@ function getRoutingConfig(fullEndpoint, useProxy) {
 export async function parseCircuitPrompt(prompt, apiKey, endpoint, model = "gpt-4o", useProxy = false) {
     const systemPrompt = `You are a Ph.D. level Quantum Computing assistant. Your task is to accurately translate natural language into a structured JSON quantum circuit plan AND provide a scientific insight.
   
-ONLY output a valid JSON object with matching the following schema. No markdown, no extra text.
+ONLY output a valid JSON object matching the following schema. No markdown, no extra text.
 {
-  "steps": [ ...array of step objects... ],
-  "explanation": "A high-level sentence or two about what just happened in the circuit."
+  "steps": [ 
+    {"type": "init", "qubits": 2},
+    {"type": "gate", "gate": "H", "targets": [0]},
+    {"type": "gate", "gate": "CNOT", "controls": [0], "targets": [1]}
+  ],
+  "explanation": "A high-level scientific insight about the circuit logic."
 }
 
 Rules:
-1. Always include an "init" element FIRST in the steps array with number of qubits.
-2. 0-indexed qubits.
-3. "gate" values must be exact: H, X, Y, Z, CNOT, RX, RY.
-4. If measuring, include targets.`;
+1. Always include an "init" element FIRST with the total number of qubits.
+2. Every 'gate' MUST specify a 'targets' array (e.g. [0]).
+3. CNOT gates MUST also specify a 'controls' array.
+4. 0-indexed qubits.
+5. "gate" values MUST be exact: H, X, Y, Z, CNOT, RX, RY.`;
 
     try {
         const fullEndpoint = normalisedEndpoint(endpoint);

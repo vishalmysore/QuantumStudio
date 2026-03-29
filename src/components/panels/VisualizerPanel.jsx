@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Eye, Play, Square, Code } from 'lucide-react';
+import { Eye, Play, Square, Code, Globe } from 'lucide-react';
+import { simulateQubit } from '../../services/simulator';
+import BlochSphere from './BlochSphere';
 
 const GATE_COLORS = {
     H: '#8b5cf6', X: '#ef4444', Y: '#f59e0b', Z: '#3b82f6',
@@ -112,8 +114,11 @@ export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {
     const isAnimatingRef = useRef(false);
     const [viewMode, setViewMode] = useState('diagram');
     const [isAnimating, setIsAnimating] = useState(false);
+    const [selectedQubit, setSelectedQubit] = useState(0);
 
     const gateSteps = (steps || []).filter(s => s.type === 'gate' || s.type === 'measure');
+    const blochCoords = simulateQubit(steps || [], selectedQubit);
+    const numQubits = (steps || []).find(s => s.type === 'init')?.qubits || 1;
 
     // Get canvas context with correct dimensions
     const getCtx = useCallback(() => {
@@ -213,13 +218,23 @@ export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn-secondary"
+                        style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', background: viewMode === 'diagram' ? 'rgba(255,255,255,0.1)' : 'transparent' }}
+                        onClick={() => setViewMode('diagram')}>
+                        <Eye size={13} /> Diagram
+                    </button>
+                    <button className="btn-secondary"
+                        style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', background: viewMode === 'bloch' ? 'rgba(255,255,255,0.1)' : 'transparent' }}
+                        onClick={() => setViewMode('bloch')}>
+                        <Globe size={13} /> Sphere
+                    </button>
+                    <button className="btn-secondary"
                         style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', background: viewMode === 'qasm' ? 'rgba(255,255,255,0.1)' : 'transparent' }}
-                        onClick={() => setViewMode(v => v === 'qasm' ? 'diagram' : 'qasm')}>
-                        {viewMode === 'diagram' ? <><Code size={13} /> QASM</> : <><Eye size={13} /> Diagram</>}
+                        onClick={() => setViewMode('qasm')}>
+                        <Code size={13} /> QASM
                     </button>
                     <button className="btn-secondary"
                         style={{ padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: isAnimating ? 'var(--accent-primary)' : 'inherit' }}
-                        disabled={!qasm || !gateSteps.length}
+                        disabled={!qasm || !gateSteps.length || viewMode === 'bloch'}
                         onClick={isAnimating ? stopAnimation : startAnimation}>
                         {isAnimating ? <><Square size={13} /> Stop</> : <><Play size={13} /> Animate</>}
                     </button>
@@ -249,6 +264,30 @@ export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {
                     <pre style={{ position: 'absolute', inset: 0, padding: '20px', margin: 0, color: 'var(--text-primary)', fontFamily: '"Fira Code", monospace', fontSize: '13px', whiteSpace: 'pre-wrap', overflowY: 'auto', zIndex: 2, background: 'rgba(0,0,0,0.4)' }}>
                         {qasm}
                     </pre>
+                )}
+
+                {/* Bloch Sphere Tab */}
+                {qasm && !isGenerating && viewMode === 'bloch' && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 2, background: 'rgba(0,0,0,0.4)', padding: '20px' }}>
+                        <div style={{ marginBottom: '10px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Select Qubit:</span>
+                            {Array.from({ length: numQubits }).map((_, i) => (
+                                <button key={i} className={`btn-secondary ${selectedQubit === i ? 'active' : ''}`}
+                                    onClick={() => setSelectedQubit(i)}
+                                    style={{ padding: '2px 8px', fontSize: '0.75rem', borderColor: selectedQubit === i ? 'var(--accent-primary)' : 'var(--panel-border)' }}>
+                                    {i}
+                                </button>
+                            ))}
+                        </div>
+                        <BlochSphere x={blochCoords.x} y={blochCoords.y} z={blochCoords.z} size={Math.min(300, 300)} />
+                        <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: 600 }}>State Vector |ψ⟩</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                                {blochCoords.state.alpha[0].toFixed(3)}{blochCoords.state.alpha[1].toFixed(3)}j |0⟩ +<br />
+                                {blochCoords.state.beta[0].toFixed(3)}{blochCoords.state.beta[1].toFixed(3)}j |1⟩
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {/* Canvas — ALWAYS in DOM so ref+ResizeObserver always work */}

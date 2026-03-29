@@ -31,6 +31,8 @@ Learning these concepts is notoriously difficult. The math is complex, and the a
 
 I built **[Quantum Studio](https://vishalmysore.github.io/QuantumStudio/)** to be the bridge between human intent and quantum logic.
 
+If you wnat to use NVIDIA you can get key here https://build.nvidia.com/explore/discover?ncid=ref-inpa-550095
+
 ### 🤖 Why I Created It
 I wanted to learn quantum computing in a truly visual and intuitive way. I realized that the best way to understand an entanglement circuit is to **see** it being built gate-by-gate. 
 

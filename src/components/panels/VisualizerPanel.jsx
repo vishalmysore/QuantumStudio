@@ -150,12 +150,24 @@ function drawCircuit(ctx, W, H, steps, visibleGateCount) {
     });
 }
 
-export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {
+export default function VisualizerPanel({ qasm, steps = [], isGenerating, onQasmChange }) {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const animRef = useRef(null);
     const isAnimatingRef = useRef(false);
     const [viewMode, setViewMode] = useState('diagram');
+    const [localQasm, setLocalQasm] = useState(qasm);
+
+    // Sync local QASM when the prop changes (e.g. from AI)
+    useEffect(() => {
+        setLocalQasm(qasm);
+    }, [qasm]);
+
+    const handleLocalQasmChange = (e) => {
+        const val = e.target.value;
+        setLocalQasm(val);
+        if (onQasmChange) onQasmChange(val);
+    };
     const [isAnimating, setIsAnimating] = useState(false);
     const [selectedQubit, setSelectedQubit] = useState(0);
 
@@ -304,9 +316,29 @@ export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {
 
                 {/* QASM text — overlaid on top when active */}
                 {qasm && !isGenerating && viewMode === 'qasm' && (
-                    <pre style={{ position: 'absolute', inset: 0, padding: '20px', margin: 0, color: 'var(--text-primary)', fontFamily: '"Fira Code", monospace', fontSize: '13px', whiteSpace: 'pre-wrap', overflowY: 'auto', zIndex: 2, background: 'rgba(0,0,0,0.4)' }}>
-                        {qasm}
-                    </pre>
+                    <div style={{ position: 'absolute', inset: 0, padding: '20px', zIndex: 2, background: 'rgba(0,0,0,0.4)', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ marginBottom: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            Edit OpenQASM 2.0 directly—diagram updates automatically
+                        </div>
+                        <textarea
+                            value={localQasm}
+                            onChange={handleLocalQasmChange}
+                            spellCheck="false"
+                            style={{
+                                flex: 1,
+                                background: 'rgba(0,0,0,0.5)',
+                                color: '#a78bfa',
+                                border: '1px solid var(--panel-border)',
+                                borderRadius: '8px',
+                                padding: '16px',
+                                fontFamily: '"Fira Code", monospace',
+                                fontSize: '13px',
+                                lineHeight: '1.5',
+                                resize: 'none',
+                                outline: 'none'
+                            }}
+                        />
+                    </div>
                 )}
 
                 {/* Bloch Sphere Tab */}

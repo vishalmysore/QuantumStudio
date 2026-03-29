@@ -3,7 +3,8 @@ import InputPanel from './panels/InputPanel';
 import ExplanationPanel from './panels/ExplanationPanel';
 import VisualizerPanel from './panels/VisualizerPanel';
 import { parseCircuitPrompt } from '../services/llm';
-import { buildQASM } from '../services/converter';
+import { buildQASM, parseQASM } from '../services/converter';
+import { detectHardcodedAlgorithm, generateAlgorithm } from '../services/hardcodedAlgorithms';
 
 export default function Workspace({ apiKey, endpoint, model, useProxy }) {
     const [steps, setSteps] = useState([]);
@@ -16,9 +17,21 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
         setIsGenerating(true);
         setError(null);
         try {
-            // 1. Send natural language to LLM
-            const result = await parseCircuitPrompt(prompt, apiKey, endpoint, model, useProxy);
-            const { steps: parsedSteps, explanation: parsedExplanation } = result;
+            // 1. Check for hardcoded algorithm intents (Hybrid Architecture)
+            const algoConfig = detectHardcodedAlgorithm(prompt);
+            let parsedSteps, parsedExplanation;
+
+            if (algoConfig) {
+                // Bypass LLM for famous algorithms to ensure 100% accuracy
+                const result = generateAlgorithm(algoConfig);
+                parsedSteps = result.steps;
+                parsedExplanation = result.explanation;
+            } else {
+                // Fallback to LLM for creative/custom intents
+                const result = await parseCircuitPrompt(prompt, apiKey, endpoint, model, useProxy);
+                parsedSteps = result.steps;
+                parsedExplanation = result.explanation;
+            }
 
             setSteps(parsedSteps);
             setExplanation(parsedExplanation);
@@ -34,6 +47,18 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
             setQasm('');
         } finally {
             setIsGenerating(false);
+        }
+    };
+    const handleQasmChange = (newQasm) => {
+        setQasm(newQasm);
+        try {
+            const newSteps = parseQASM(newQasm);
+            if (newSteps && newSteps.length > 0) {
+                setSteps(newSteps);
+                setExplanation("Manually edited QASM detected. Diagram and Bloch Sphere updated to match your code.");
+            }
+        } catch (e) {
+            console.warn("Invalid QASM edit ignored", e);
         }
     };
 
@@ -60,6 +85,7 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
                 qasm={qasm}
                 steps={steps}
                 isGenerating={isGenerating}
+                onQasmChange={handleQasmChange}
             />
         </div>
     );

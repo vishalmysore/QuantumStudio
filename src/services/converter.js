@@ -1,46 +1,89 @@
-export function buildQASM(steps) {
-    let qasm = "OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\n";
-    let qubitCount = 2; // Default
+/**
+ * QUANTUM ASSEMBLY CONVERTER (QASM 2.0)
+ * 
+ * Bidirectional conversion between Step JSON and OpenQASM 2.0.
+ */
 
-    // First pass: extract initialization
-    for (const step of steps) {
-        if (step.type === "init") {
-            qubitCount = Math.max(step.qubits || 2, qubitCount);
-            break;
-        }
-        // Infer from targets if no init or missing info
-        if (step.targets) {
-            qubitCount = Math.max(qubitCount, ...step.targets.map(t => t + 1));
-        }
-    }
+export function buildQASM(steps) {
+    if (!steps || steps.length === 0) return "";
+    let qasm = "OPENQASM 2.0;\ninclude \"qelib1.inc\";\n\n";
+
+    const init = steps.find(s => s.type === "init");
+    const qubitCount = init ? init.qubits : 2;
 
     qasm += `qreg q[${qubitCount}];\n`;
     qasm += `creg c[${qubitCount}];\n\n`;
 
-    // Second pass: gates
-    for (const step of steps) {
+    steps.forEach(step => {
         if (step.type === "gate") {
-            if (step.gate === "CNOT" || step.gate === "CX") {
+            const gate = step.gate?.toLowerCase() || "h";
+            if (gate === "cx" || gate === "cnot") {
                 const c = step.controls?.[0] ?? 0;
                 const t = step.targets?.[0] ?? 1;
                 qasm += `cx q[${c}], q[${t}];\n`;
-            }
-            else if (["RX", "RY", "RZ"].includes(step.gate) && step.angle !== undefined) {
+            } else if (["rx", "ry", "rz"].includes(gate) && step.angle !== undefined) {
                 const t = step.targets?.[0] ?? 0;
-                qasm += `${step.gate.toLowerCase()}(${step.angle}) q[${t}];\n`;
-            }
-            else {
-                // H, X, Y, Z
-                const t = step.targets?.[0] ?? 0;
-                qasm += `${step.gate.toLowerCase()} q[${t}];\n`;
+                qasm += `${gate}(${step.angle}) q[${t}];\n`;
+            } else {
+                (step.targets || [0]).forEach(t => {
+                    qasm += `${gate} q[${t}];\n`;
+                });
             }
         } else if (step.type === "measure") {
-            const targets = step.targets || Array.from({ length: qubitCount }, (_, i) => i);
-            for (const t of targets) {
+            const targets = step.targets || [0];
+            targets.forEach(t => {
                 qasm += `measure q[${t}] -> c[${t}];\n`;
-            }
+            });
         }
-    }
+    });
 
     return qasm;
+}
+
+export function parseQASM(qasm) {
+    const steps = [];
+    const lines = qasm.split('\n');
+    let qubitCount = 0;
+
+    // 1. Detect qubit count from qreg
+    const qregMatch = qasm.match(/qreg\s+q\[(\d+)\]/i);
+    if (qregMatch) {
+        qubitCount = parseInt(qregMatch[1]);
+        steps.push({ type: 'init', qubits: qubitCount });
+    }
+
+    // 2. Parse gates
+    lines.forEach(line => {
+        const clean = line.trim().toLowerCase();
+        if (!clean || clean.startsWith('openqasm') || clean.startsWith('include') || clean.startsWith('qreg') || clean.startsWith('creg')) return;
+
+        // Single qubit gates: h, x, y, z
+        const singleMatch = clean.match(/^([hxyz])\s+q\[(\d+)\]/i);
+        if (singleMatch) {
+            steps.push({ type: 'gate', gate: singleMatch[1].toUpperCase(), targets: [parseInt(singleMatch[2])] });
+            return;
+        }
+
+        // CX / CNOT
+        const cxMatch = clean.match(/^cx\s+q\[(\d+)\],\s*q\[(\d+)\]/i);
+        if (cxMatch) {
+            steps.push({ type: 'gate', gate: 'CNOT', controls: [parseInt(cxMatch[1])], targets: [parseInt(cxMatch[2])] });
+            return;
+        }
+
+        // RX / RY / RZ
+        const rotMatch = clean.match(/^(r[xyz])\(([^)]+)\)\s+q\[(\d+)\]/i);
+        if (rotMatch) {
+            steps.push({ type: 'gate', gate: rotMatch[1].toUpperCase(), angle: parseFloat(rotMatch[2]), targets: [parseInt(rotMatch[3])] });
+            return;
+        }
+
+        // Measure
+        const measureMatch = clean.match(/^measure\s+q\[(\d+)\]/i);
+        if (measureMatch) {
+            steps.push({ type: 'measure', targets: [parseInt(measureMatch[1])] });
+        }
+    });
+
+    return steps;
 }

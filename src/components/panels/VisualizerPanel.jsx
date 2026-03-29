@@ -113,7 +113,7 @@ export default function VisualizerPanel({ qasm, steps = [], isGenerating }) {
     const [viewMode, setViewMode] = useState('diagram');
     const [isAnimating, setIsAnimating] = useState(false);
 
-    const gateSteps = steps.filter(s => s.type === 'gate' || s.type === 'measure');
+    const gateSteps = (steps || []).filter(s => s.type === 'gate' || s.type === 'measure');
 
     // Get canvas context with correct dimensions
     const getCtx = useCallback(() => {

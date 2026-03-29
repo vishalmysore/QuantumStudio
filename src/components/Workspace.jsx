@@ -6,7 +6,7 @@ import { parseCircuitPrompt } from '../services/llm';
 import { buildQASM } from '../services/converter';
 
 export default function Workspace({ apiKey, endpoint, model, useProxy }) {
-    const [steps, setSteps] = useState(null);
+    const [steps, setSteps] = useState([]);
     const [qasm, setQasm] = useState('');
     const [error, setError] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -25,7 +25,7 @@ export default function Workspace({ apiKey, endpoint, model, useProxy }) {
         } catch (err) {
             console.error(err);
             setError(err.message);
-            setSteps(null);
+            setSteps([]);
             setQasm('');
         } finally {
             setIsGenerating(false);

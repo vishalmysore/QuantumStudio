@@ -32,9 +32,16 @@ export function detectHardcodedAlgorithm(prompt) {
         return { type: 'ghz', qubits };
     }
 
-    // 5. Bell State
+    // 5. Bell State - Only match if specifically asking for 2 qubits or no count mentioned
     if (p.includes('bell state')) {
-        return { type: 'bell' };
+        // If they ask for > 2 qubits in a Bell context, it's likely a complex request -> fallback to LLM
+        const countMatch = p.match(/(\d+)\s*qubit/);
+        if (countMatch && parseInt(countMatch[1]) > 2) return null;
+
+        const indices = p.match(/(\d+)\s*(?:and|,|&)\s*(\d+)/);
+        const q1 = indices ? parseInt(indices[1]) : 0;
+        const q2 = indices ? parseInt(indices[2]) : 1;
+        return { type: 'bell', q1, q2 };
     }
 
     return null;
@@ -46,20 +53,21 @@ export function generateAlgorithm(config) {
         case 'deutsch': return generateDeutsch(config.isConstant);
         case 'teleportation': return generateTeleportation();
         case 'ghz': return generateGHZ(config.qubits);
-        case 'bell': return generateBell(0, 1);
+        case 'bell': return generateBell(config.q1, config.q2);
         default: return null;
     }
 }
 
 function generateBell(q1, q2) {
+    const numQ = Math.max(q1, q2, 1) + 1;
     return {
         steps: [
-            { type: 'init', qubits: 2 },
+            { type: 'init', qubits: numQ },
             { type: 'gate', gate: 'H', targets: [q1] },
             { type: 'gate', gate: 'CNOT', controls: [q1], targets: [q2] },
             { type: 'measure', targets: [q1, q2] }
         ],
-        explanation: "This creates an entangled Bell state (Φ+) where the qubits are perfectly correlated."
+        explanation: `This creates an entangled Bell state (Φ+) between q[${q1}] and q[${q2}].`
     };
 }
 

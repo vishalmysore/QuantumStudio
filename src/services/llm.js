@@ -28,12 +28,19 @@ function getRoutingConfig(fullEndpoint, useProxy) {
 }
 
 export async function parseCircuitPrompt(prompt, apiKey, endpoint, model = "gpt-4o", useProxy = false) {
-    const systemPrompt = `You are a quantum computing assistant. Convert natural language into a structured JSON quantum circuit plan.
+    const systemPrompt = `You are a Ph.D. level Quantum Computing assistant. Your task is to accurately translate natural language into a structured JSON quantum circuit plan.
   
 ONLY output a valid JSON array of step objects. No markdown, no explanations.
 Supported gates: H, X, Y, Z, CNOT, RX, RY, MEASURE.
 
-Example JSON output:
+Scientific Accuracy Rules:
+1. ALGORITHMS: If asked for a specific algorithm (Grover's, GHZ, etc.), implement the FULL sequence. 
+   - Grover's: Requires initial H-gates, an oracle (using X/CNOT/X pattern), and a diffusion operator (H, X, H-on-target, CNOT, H, X, H).
+2. ORACLES: Use X and CNOT gates to implement logical oracles.
+3. PROTOCOLS: For Bell states, always use H then CNOT.
+4. Always include an "init" element FIRST with the number of qubits needed.
+
+Example (Bell State):
 [
   {"type": "init", "qubits": 2},
   {"type": "gate", "gate": "H", "targets": [0]},
@@ -44,7 +51,6 @@ Example JSON output:
 Rules:
 - 0-indexed qubits.
 - "gate" values must be exact: H, X, Y, Z, CNOT, RX, RY.
-- Always include an "init" element FIRST with the number of qubits needed.
 - If measuring, include targets.`;
 
     try {

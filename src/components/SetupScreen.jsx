@@ -19,8 +19,13 @@ export default function SetupScreen({ onSave }) {
 
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-    const [useProxy, setUseProxy] = useState(isLocalhost || localStorage.getItem('quantum_ai_proxy') === 'true');
-    const [customProxyUrl, setCustomProxyUrl] = useState(localStorage.getItem('quantum_ai_custom_proxy') || '');
+    const [useProxy, setUseProxy] = useState(() => {
+        const saved = localStorage.getItem('quantum_ai_proxy');
+        return saved !== null ? saved === 'true' : true;
+    });
+    const [customProxyUrl, setCustomProxyUrl] = useState(() => {
+        return localStorage.getItem('quantum_ai_custom_proxy') || 'https://quantumstudio.visrow.workers.dev/';
+    });
     const [isTesting, setIsTesting] = useState(false);
     const [error, setError] = useState(null);
 

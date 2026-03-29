@@ -2,6 +2,8 @@
 
 **Quantum Studio** is an AI-powered, browser-based quantum circuit designer. It converts natural language prompts (e.g., *"Create a Bell state and measure it"*) into structured quantum logic and **OpenQASM 2.0** code, visualized with a custom animated canvas renderer.
 
+![Quantum Studio Desktop](public/studio.png)
+
 👉 **[Launch Quantum Studio Live](https://vishalmysore.github.io/QuantumStudio/)**
 
 ## 💡 Why Quantum Studio?

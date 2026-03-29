@@ -33,33 +33,30 @@ export async function parseCircuitPrompt(prompt, apiKey, endpoint, model = "gpt-
 ONLY output a valid JSON object with matching the following schema. No markdown, no extra text.
 {
   "steps": [ ...array of step objects... ],
-  "explanation": "A high-level sentence or two about what just happened in the circuit (e.g. 'You have now created an equal superposition of all 16 states simultaneously')."
+  "explanation": "A high-level sentence or two about what just happened in the circuit."
 }
 
-Supported gates: H, X, Y, Z, CNOT, RX, RY, MEASURE.
-
-Scientific Accuracy Rules:
-1. ALGORITHMS: If asked for a specific algorithm (Grover's, GHZ, etc.), implement the FULL sequence. 
-   - Grover's: Requires initial H-gates, an oracle (using X/CNOT/X pattern), and a diffusion operator (H, X, H-on-target, CNOT, H, X, H).
-2. ORACLES: Use X and CNOT gates to implement logical oracles.
-3. PROTOCOLS: For Bell states, always use H then CNOT.
-4. Always include an "init" element FIRST in the steps array with the number of qubits needed.
-
-Example:
-{
-  "steps": [
-    {"type": "init", "qubits": 2},
-    {"type": "gate", "gate": "H", "targets": [0]},
-    {"type": "gate", "gate": "CNOT", "controls": [0], "targets": [1]},
-    {"type": "measure", "targets": [0, 1]}
-  ],
-  "explanation": "You have created a Bell state (entanglement) where measuring one qubit instantly reveals the state of the other, regardless of distance."
-}
+Scientific Reference Library (REQUIRED PATTERNS):
+1. DEUTSCH ALGORITHM: 
+   - Init 2 qubits. 
+   - Apply X to q[1]. 
+   - Apply H to both q[0] and q[1].
+   - Oracle: (e.g. CNOT for balanced, Identity/Nothing for constant).
+   - Apply final H to q[0] (Interference).
+   - Measure q[0].
+2. GROVER'S ALGORITHM (2 qubits):
+   - Init 2 qubits.
+   - Prep: H on both q[0], q[1].
+   - Oracle (for |11>): H q[1], CNOT q[0]->q[1], H q[1].
+   - Diffusion: H on both, X on both, H q[1], CNOT q[0]->q[1], H q[1], X on both, H on both.
+3. BELL STATE: H then CNOT.
+4. GHZ STATE (3+): H on q[0], then CNOTs cascading down.
 
 Rules:
+- NEVER oversimplify. Include preparation (ancillas) and interference steps.
+- Always include an "init" element FIRST in the steps array.
 - 0-indexed qubits.
-- "gate" values must be exact: H, X, Y, Z, CNOT, RX, RY.
-- If measuring, include targets.`;
+- "gate" values must be exact: H, X, Y, Z, CNOT, RX, RY.`;
 
     try {
         const fullEndpoint = normalisedEndpoint(endpoint);

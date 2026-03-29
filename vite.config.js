@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import https from 'https'
-import http from 'http'
-import { URL } from 'url'
+import https from 'node:https'
+import http from 'node:http'
+import { URL } from 'node:url'
 
 // https://vite.dev/config/
 export default defineConfig({

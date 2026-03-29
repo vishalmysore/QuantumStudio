@@ -5,12 +5,12 @@ import http from 'node:http'
 import { URL } from 'node:url'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   // GitHub Pages serves from /QuantumStudio/ — use '/' locally, '/QuantumStudio/' in production
   base: process.env.NODE_ENV === 'production' ? '/QuantumStudio/' : '/',
   plugins: [
     react(),
-    {
+    command === 'serve' && {
       name: 'cors-bypass-proxy',
       configureServer(server) {
         server.middlewares.use('/api/proxy', (req, res) => {
@@ -59,5 +59,5 @@ export default defineConfig({
         });
       }
     }
-  ],
-})
+  ].filter(Boolean),
+}))

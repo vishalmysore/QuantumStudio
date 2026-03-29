@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Send, Zap, Loader2 } from 'lucide-react';
+import { Send, Zap, Loader2, AlertCircle } from 'lucide-react';
 
 export default function InputPanel({ onGenerate, isGenerating }) {
     const [prompt, setPrompt] = useState("Create a Bell state between two qubits");
@@ -16,6 +16,22 @@ export default function InputPanel({ onGenerate, isGenerating }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
                 <Zap size={20} color="var(--accent-primary)" />
                 <h3 style={{ fontSize: '1.125rem' }}>1. Natural Language</h3>
+            </div>
+
+            <div style={{
+                background: 'rgba(239, 149, 0, 0.1)',
+                border: '1px solid rgba(239, 149, 0, 0.3)',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                marginBottom: '16px',
+                display: 'flex',
+                gap: '8px',
+                alignItems: 'center',
+                color: '#f59e0b',
+                fontSize: '0.8rem'
+            }}>
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                <span><strong>Note:</strong> We are currently refining complex algorithm parsing (Deutsch/Grover). Use standard gate instructions for best results.</span>
             </div>
 
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>

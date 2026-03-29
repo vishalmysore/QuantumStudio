@@ -36,27 +36,11 @@ ONLY output a valid JSON object with matching the following schema. No markdown,
   "explanation": "A high-level sentence or two about what just happened in the circuit."
 }
 
-Scientific Reference Library (REQUIRED PATTERNS):
-1. DEUTSCH ALGORITHM: 
-   - Init 2 qubits. 
-   - Apply X to q[1]. 
-   - Apply H to both q[0] and q[1].
-   - Oracle: (e.g. CNOT for balanced, Identity/Nothing for constant).
-   - Apply final H to q[0] (Interference).
-   - Measure q[0].
-2. GROVER'S ALGORITHM (2 qubits):
-   - Init 2 qubits.
-   - Prep: H on both q[0], q[1].
-   - Oracle (for |11>): H q[1], CNOT q[0]->q[1], H q[1].
-   - Diffusion: H on both, X on both, H q[1], CNOT q[0]->q[1], H q[1], X on both, H on both.
-3. BELL STATE: H then CNOT.
-4. GHZ STATE (3+): H on q[0], then CNOTs cascading down.
-
 Rules:
-- NEVER oversimplify. Include preparation (ancillas) and interference steps.
-- Always include an "init" element FIRST in the steps array.
-- 0-indexed qubits.
-- "gate" values must be exact: H, X, Y, Z, CNOT, RX, RY.`;
+1. Always include an "init" element FIRST in the steps array with number of qubits.
+2. 0-indexed qubits.
+3. "gate" values must be exact: H, X, Y, Z, CNOT, RX, RY.
+4. If measuring, include targets.`;
 
     try {
         const fullEndpoint = normalisedEndpoint(endpoint);

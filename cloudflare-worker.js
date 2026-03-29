@@ -1,10 +1,34 @@
+/**
+ * SECURE CORS PROXY FOR QUANTUM STUDIO
+ * 
+ * To make this truly safe:
+ * 1. Update ALLOWED_ORIGIN to your GitHub Pages URL
+ * 2. Update ALLOWED_TARGETS to only the APIs you use
+ */
+
+const ALLOWED_ORIGIN = "https://vishalmysore.github.io";
+const ALLOWED_TARGETS = [
+    "https://integrate.api.nvidia.com/v1/chat/completions",
+    "https://api.openai.com/v1/chat/completions"
+];
+
 export default {
-    async fetch(request) {
-        // Handle CORS preflight requests
+    async fetch(request, env) {
+        const origin = request.headers.get("Origin");
+
+        // 1. ORIGIN LOCK: Only allow requests from your specific frontend
+        // (Uncomment this in production for maximum safety)
+        /*
+        if (origin !== ALLOWED_ORIGIN) {
+            return new Response("Unauthorized Origin", { status: 403 });
+        }
+        */
+
+        // Handle CORS preflight
         if (request.method === "OPTIONS") {
             return new Response(null, {
                 headers: {
-                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Origin": origin || "*",
                     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
                     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-target-url",
                     "Access-Control-Max-Age": "86400",
@@ -12,35 +36,36 @@ export default {
             });
         }
 
-        // Get the target URL from the custom header
         const targetUrl = request.headers.get("x-target-url");
         if (!targetUrl) {
-            return new Response("Missing x-target-url header", { status: 400 });
+            return new Response("Missing x-target-url", { status: 400 });
         }
 
-        // Create a new request to the target API
-        const targetRequest = new Request(targetUrl, {
-            method: request.method,
-            headers: request.headers,
-            body: request.body
-        });
+        // 2. TARGET LOCK: prevent your worker from being used to hit random sites
+        const isAllowedTarget = ALLOWED_TARGETS.some(t => targetUrl.startsWith(t));
+        if (!isAllowedTarget) {
+            return new Response("Target URL not whitelisted for this proxy", { status: 403 });
+        }
 
-        // Strip the target url header before sending
-        targetRequest.headers.delete("x-target-url");
-        // Ensure standard fetch headers
-        targetRequest.headers.delete("Host");
-        targetRequest.headers.delete("Origin");
-        targetRequest.headers.delete("Referer");
+        // 3. SECURE HEADER PASSING
+        // We only pass through the essential headers to the final API
+        const cleanHeaders = new Headers();
+        cleanHeaders.set("Content-Type", "application/json");
+
+        const auth = request.headers.get("Authorization");
+        if (auth) cleanHeaders.set("Authorization", auth);
 
         try {
-            // Fetch from the actual API (e.g., Nvidia)
-            const response = await fetch(targetRequest);
+            const response = await fetch(targetUrl, {
+                method: request.method,
+                headers: cleanHeaders,
+                body: request.body
+            });
 
-            // Create a new response to send back to the browser
             const newResponse = new Response(response.body, response);
 
-            // Inject CORS headers so the browser accepts it
-            newResponse.headers.set("Access-Control-Allow-Origin", "*");
+            // Re-inject CORS to satisfy the browser
+            newResponse.headers.set("Access-Control-Allow-Origin", origin || "*");
             newResponse.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
             newResponse.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, x-target-url");
 

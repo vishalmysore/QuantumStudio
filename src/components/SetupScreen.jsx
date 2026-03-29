@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { KeyRound, ShieldCheck, ArrowRight, Server, Cpu, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { KeyRound, ShieldCheck, ArrowRight, Server, Cpu, Loader2, AlertCircle, Info } from 'lucide-react';
 import { testConnection } from '../services/llm';
 
 const inputStyle = {
@@ -16,8 +16,10 @@ export default function SetupScreen({ onSave }) {
     const [apiKey, setApiKey] = useState('');
     const [endpoint, setEndpoint] = useState('https://integrate.api.nvidia.com/v1');
     const [model, setModel] = useState('nvidia/nemotron-nano-12b-v2-vl');
-    // Auto-enable proxy on localhost — all external APIs block direct browser requests via CORS
+
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+    // In production (GitHub pages), local proxy is dead. Force user to understand CORS limitations.
     const [useProxy, setUseProxy] = useState(isLocalhost);
     const [isTesting, setIsTesting] = useState(false);
     const [error, setError] = useState(null);
@@ -26,6 +28,7 @@ export default function SetupScreen({ onSave }) {
         setIsTesting(true);
         setError(null);
         try {
+            // If they check proxy in production, it will fail 404. We just pass what they selected.
             await testConnection(apiKey, endpoint, model, useProxy);
             onSave(apiKey, endpoint, model, useProxy);
         } catch (err) {
@@ -36,7 +39,7 @@ export default function SetupScreen({ onSave }) {
     };
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%', overflowY: 'auto', padding: '20px' }}>
             <div className="glass-panel animate-fade-in" style={{ maxWidth: '520px', width: '100%', padding: '40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                 <div style={{ textAlign: 'center' }}>
@@ -44,7 +47,16 @@ export default function SetupScreen({ onSave }) {
                     <p style={{ color: 'var(--text-secondary)' }}>Connect to any OpenAI-compatible LLM endpoint.</p>
                 </div>
 
-                {/* Endpoint */}
+                {!isLocalhost && (
+                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '12px', borderRadius: '8px', display: 'flex', gap: '10px', alignItems: 'flex-start', color: '#38bdf8' }}>
+                        <Info size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                        <div style={{ fontSize: '0.85rem', lineHeight: '1.4' }}>
+                            <strong>Running in Production (GitHub Pages)</strong><br />
+                            Some APIs (like Nvidia) block browser requests via CORS. To use them here, you must use a CORS unblocker browser extension, OR use a natively supported API like OpenAI.
+                        </div>
+                    </div>
+                )}
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Server size={16} /> Inference Endpoint
@@ -53,7 +65,6 @@ export default function SetupScreen({ onSave }) {
                         placeholder="https://integrate.api.nvidia.com/v1" style={inputStyle} />
                 </div>
 
-                {/* Model */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Cpu size={16} /> Model Name
@@ -62,7 +73,6 @@ export default function SetupScreen({ onSave }) {
                         placeholder="nvidia/nemotron-nano-12b-v2-vl" style={inputStyle} />
                 </div>
 
-                {/* API Key */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <KeyRound size={16} /> API Key
@@ -71,35 +81,33 @@ export default function SetupScreen({ onSave }) {
                         placeholder="nvapi-... or sk-..." style={inputStyle} />
                 </div>
 
-                {/* Proxy toggle */}
-                <div style={{
-                    background: useProxy ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${useProxy ? 'rgba(16,185,129,0.3)' : 'var(--panel-border)'}`,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
-                    cursor: 'pointer',
-                }} onClick={() => setUseProxy(p => !p)}>
-                    <input type="checkbox" id="useProxy" checked={useProxy} readOnly
-                        style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px', flexShrink: 0 }} />
-                    <div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                            Route via local proxy
-                            {isLocalhost && (
+                {isLocalhost && (
+                    <div style={{
+                        background: useProxy ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${useProxy ? 'rgba(16,185,129,0.3)' : 'var(--panel-border)'}`,
+                        padding: '12px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '10px',
+                        cursor: 'pointer',
+                    }} onClick={() => setUseProxy(p => !p)}>
+                        <input type="checkbox" id="useProxy" checked={useProxy} readOnly
+                            style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px', flexShrink: 0 }} />
+                        <div>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                Route via local proxy
                                 <span style={{ background: 'rgba(16,185,129,0.2)', color: 'var(--success)', padding: '1px 7px', borderRadius: '10px', fontSize: '0.7rem', fontWeight: 700 }}>
                                     AUTO-ON · localhost
                                 </span>
-                            )}
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
-                            Bypasses CORS restrictions. Required when calling external APIs from a local dev browser.
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                                Bypasses CORS restrictions. Required when calling external APIs from a local dev browser.
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Privacy note */}
                 <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '14px', borderRadius: '8px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                     <ShieldCheck color="var(--success)" style={{ flexShrink: 0, marginTop: '1px' }} />
                     <div>
@@ -110,7 +118,6 @@ export default function SetupScreen({ onSave }) {
                     </div>
                 </div>
 
-                {/* Error banner */}
                 {error && (
                     <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid var(--danger)', padding: '12px', borderRadius: '8px', display: 'flex', gap: '8px', alignItems: 'center', color: 'var(--danger)', fontSize: '0.875rem' }}>
                         <AlertCircle size={18} style={{ flexShrink: 0 }} />

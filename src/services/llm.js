@@ -5,6 +5,28 @@ function normalisedEndpoint(endpoint) {
     return base + '/chat/completions';
 }
 
+function getRoutingConfig(fullEndpoint, useProxy) {
+    let fetchUrl = fullEndpoint;
+    let headers = {};
+
+    if (useProxy) {
+        headers["x-target-url"] = fullEndpoint;
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+        if (isLocalhost) {
+            fetchUrl = '/api/proxy'; // Vite dev server proxy
+        } else {
+            // Production serverless proxy stored in localStorage (or fallback if empty)
+            fetchUrl = localStorage.getItem('quantum_ai_custom_proxy') || '';
+            if (!fetchUrl) {
+                throw new Error("Proxy is enabled in production but no Custom Proxy URL is provided.");
+            }
+        }
+    }
+
+    return { fetchUrl, routingHeaders: headers };
+}
+
 export async function parseCircuitPrompt(prompt, apiKey, endpoint, model = "gpt-4o", useProxy = false) {
     const systemPrompt = `You are a quantum computing assistant. Convert natural language into a structured JSON quantum circuit plan.
   
@@ -27,15 +49,13 @@ Rules:
 
     try {
         const fullEndpoint = normalisedEndpoint(endpoint);
-        const fetchUrl = useProxy ? '/api/proxy' : fullEndpoint;
+        const { fetchUrl, routingHeaders } = getRoutingConfig(fullEndpoint, useProxy);
+
         const headers = {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${apiKey}`,
+            ...routingHeaders
         };
-
-        if (useProxy) {
-            headers["x-target-url"] = fullEndpoint;
-        }
 
         const response = await fetch(fetchUrl, {
             method: "POST",
@@ -76,15 +96,13 @@ Rules:
 export async function testConnection(apiKey, endpoint, model, useProxy = false) {
     try {
         const fullEndpoint = normalisedEndpoint(endpoint);
-        const fetchUrl = useProxy ? '/api/proxy' : fullEndpoint;
+        const { fetchUrl, routingHeaders } = getRoutingConfig(fullEndpoint, useProxy);
+
         const headers = {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${apiKey}`,
+            ...routingHeaders
         };
-
-        if (useProxy) {
-            headers["x-target-url"] = fullEndpoint;
-        }
 
         const response = await fetch(fetchUrl, {
             method: "POST",

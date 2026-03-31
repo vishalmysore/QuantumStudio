@@ -55,6 +55,7 @@ export default function SetupScreen({ onSave }) {
         { name: "Bell State Correlation", file: "bell_state_visualizer.html", desc: "Interactive EPR pair entanglement." },
         { name: "Grover's Search Sim", file: "grovers_algorithm_visualizer.html", desc: "Watch amplitude amplification live." },
         { name: "Teleportation Lab", file: "teleportation_visualizer.html", desc: "Step-by-step state transfer." },
+        { name: "Deutsch Algorithm", file: "deutsch_algorithm_visualizer.html", desc: "Oracle-based function classification." },
         { name: "Bloch Sphere 3D", file: "bloch_sphere_interactive.html", desc: "Full 3D rotation playground." },
         { name: "Measurement Collapse", file: "measurement_collapse_visualizer.html", desc: "See probabilities become reality." },
         { name: "Gate Transformer", file: "gate_transformer_visualizer.html", desc: "How gates change the Bloch vector." },

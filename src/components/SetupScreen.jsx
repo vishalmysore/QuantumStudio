@@ -57,6 +57,7 @@ export default function SetupScreen({ onSave }) {
         { name: "Teleportation Lab", file: "teleportation_visualizer.html", desc: "Step-by-step state transfer." },
         { name: "Deutsch Algorithm", file: "deutsch_algorithm_visualizer.html", desc: "Oracle-based function classification." },
         { name: "Bloch Sphere 3D", file: "bloch_sphere_interactive.html", desc: "Full 3D rotation playground." },
+        { name: "GHZ State (Cat States)", file: "ghz_state_visualizer.html", desc: "Maximum multi-qubit entanglement." },
         { name: "Measurement Collapse", file: "measurement_collapse_visualizer.html", desc: "See probabilities become reality." },
         { name: "Gate Transformer", file: "gate_transformer_visualizer.html", desc: "How gates change the Bloch vector." },
         { name: "Multi-Qubit Explorer", file: "multi_qubit_explorer.html", desc: "Visualizing higher-order Hilbert space." }

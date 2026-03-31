@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Qubit Explorer - Quantum Studio</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    font-family: var(--font-sans);
+    background: #fafbfc;
+    margin: 0;
+    padding: 20px;
+    color: #1a1a1a;
+  }
+  
+  .container { 
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    font-size: 36px;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .header p {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .main-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 968px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+  
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+  
+  .qubit-count {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  
+  .count-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+  
+  .count-btn.active {
+    background: #534AB7;
+    color: white;
+    border-color: #534AB7;
+  }
+  
+  .count-btn:hover:not(.active) {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+  }
+  
+  .state-selector {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .state-btn {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  
+  .state-btn.selected {
+    background: #E1F5EE;
+    border-color: #5DCAA5;
+    font-weight: 600;
+  }
+  
+  .state-btn:hover {
+    background: #f8f9fa;
+  }
+  
+  .viz-area {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .viz-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #1a1a1a;
+  }
+  
+  .state-grid {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  
+  .state-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .state-label {
+    font-size: 16px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    min-width: 80px;
+    color: #1a1a1a;
+  }
+  
+  .amp-bar-container {
+    flex: 1;
+    height: 32px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    position: relative;
+  }
+  
+  .amp-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #534AB7 0%, #8B5CF6 100%);
+    transition: width 0.4s ease;
+    border-radius: 5px;
+  }
+  
+  .amp-value {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: #6b7280;
+  }
+  
+  .prob-value {
+    font-size: 14px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    min-width: 60px;
+    text-align: right;
+    color: #1a1a1a;
+  }
+  
+  .qubit-visual {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .qubit-box {
+    width: 80px;
+    height: 80px;
+    border: 3px solid #534AB7;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    position: relative;
+  }
+  
+  .qubit-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  
+  .qubit-state {
+    font-size: 28px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #534AB7;
+  }
+  
+  .entangled-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: #f59e0b;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .connection-line {
+    flex: 1;
+    height: 3px;
+    background: linear-gradient(90deg, #534AB7 0%, #8B5CF6 50%, #534AB7 100%);
+    margin: 0 -4px;
+    border-radius: 2px;
+    animation: pulse-line 2s infinite;
+  }
+  
+  @keyframes pulse-line {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+  
+  .info-panel {
+    background: #F0EDFF;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .info-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #3C3489;
+    margin-bottom: 8px;
+  }
+  
+  .info-text {
+    font-size: 13px;
+    color: #1a1a1a;
+    line-height: 1.5;
+  }
+  
+  .formula-display {
+    background: white;
+    border: 2px solid #AFA9EC;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+  
+  .formula {
+    font-size: 24px;
+    font-family: var(--font-mono);
+    color: #534AB7;
+    font-weight: 600;
+  }
+  
+  .complexity-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 16px;
+  }
+  
+  .complexity-badge.low {
+    background: #E1F5EE;
+    color: #085041;
+  }
+  
+  .complexity-badge.medium {
+    background: #FEF3E7;
+    color: #7C4701;
+  }
+  
+  .complexity-badge.high {
+    background: #FAECE7;
+    color: #712B13;
+  }
+  
+  .action-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  
+  .action-btn:hover {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+  }
+  
+  .preset-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .preset-label {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1>🔗 Multi-Qubit State Explorer</h1>
+    <p>Understand exponential growth and quantum state spaces</p>
+  </div>
+
+  <div class="main-grid">
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-title">Number of Qubits</div>
+        <div class="qubit-count">
+          <button class="count-btn" onclick="setQubitCount(1)">1</button>
+          <button class="count-btn active" onclick="setQubitCount(2)">2</button>
+          <button class="count-btn" onclick="setQubitCount(3)">3</button>
+        </div>
+        
+        <div class="complexity-badge" id="complexity-badge">
+          4 possible states
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Select Basis State</div>
+        <div class="state-selector" id="state-selector"></div>
+        
+        <div class="preset-section">
+          <div class="preset-label">Quick Presets</div>
+          <button class="action-btn" onclick="setEqualSuperposition()">⚛️ Equal Superposition</button>
+          <button class="action-btn" onclick="setBellState()">🔗 Bell State (2 qubits)</button>
+          <button class="action-btn" onclick="setGHZState()">🐱 GHZ State (3 qubits)</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="viz-area">
+      <div class="viz-title">Current Quantum State</div>
+      
+      <div class="qubit-visual" id="qubit-visual"></div>
+      
+      <div class="formula-display">
+        <div class="formula" id="formula">|ψ⟩ = |00⟩</div>
+      </div>
+      
+      <div class="info-panel">
+        <div class="info-title" id="info-title">Product State (Not Entangled)</div>
+        <div class="info-text" id="info-text">
+          This is a simple product state. Each qubit can be described independently.
+        </div>
+      </div>
+      
+      <div class="card-title">State Vector Amplitudes</div>
+      <div class="state-grid" id="state-grid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let numQubits = 2;
+let currentState = '00';
+let amplitudes = {};
+
+const stateInfo = {
+  '00': { title: 'Product State |00⟩', text: 'Both qubits are in |0⟩. This is separable: qubit 1 is definitely 0, qubit 2 is definitely 0.' },
+  '01': { title: 'Product State |01⟩', text: 'Qubit 1 is |0⟩, qubit 2 is |1⟩. Separable and independent.' },
+  '10': { title: 'Product State |10⟩', text: 'Qubit 1 is |1⟩, qubit 2 is |0⟩. Separable state.' },
+  '11': { title: 'Product State |11⟩', text: 'Both qubits are |1⟩. Independent qubits.' },
+  'bell': { title: '🔗 Entangled Bell State', text: 'Maximum entanglement! Measuring one qubit instantly determines the other. (|00⟩ + |11⟩)/√2', entangled: true },
+  'ghz': { title: '🐱 Entangled GHZ State', text: 'Three-qubit "Schrödinger cat" state. Entanglement across all qubits. (|000⟩ + |111⟩)/√2', entangled: true },
+  'superposition': { title: '⚛️ Equal Superposition', text: `All ${Math.pow(2, numQubits)} basis states have equal probability. Maximum uncertainty!` }
+};
+
+function setQubitCount(n) {
+  numQubits = n;
+  document.querySelectorAll('.count-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i + 1 === n);
+  });
+  
+  const numStates = Math.pow(2, n);
+  document.getElementById('complexity-badge').textContent = `${numStates} possible states`;
+  document.getElementById('complexity-badge').className = 
+    'complexity-badge ' + (numStates <= 4 ? 'low' : numStates <= 8 ? 'medium' : 'high');
+  
+  generateStateSelector();
+  setEqualSuperposition();
+}
+
+function generateStateSelector() {
+  const selector = document.getElementById('state-selector');
+  selector.innerHTML = '';
+  
+  const numStates = Math.pow(2, numQubits);
+  for (let i = 0; i < numStates; i++) {
+    const binary = i.toString(2).padStart(numQubits, '0');
+    const btn = document.createElement('button');
+    btn.className = 'state-btn';
+    btn.textContent = '|' + binary + '⟩';
+    btn.onclick = () => setBasisState(binary);
+    selector.appendChild(btn);
+  }
+}
+
+function setBasisState(state) {
+  currentState = state;
+  
+  // Reset amplitudes
+  amplitudes = {};
+  const numStates = Math.pow(2, numQubits);
+  for (let i = 0; i < numStates; i++) {
+    const binary = i.toString(2).padStart(numQubits, '0');
+    amplitudes[binary] = binary === state ? 1 : 0;
+  }
+  
+  updateVisualization();
+  
+  document.querySelectorAll('.state-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === '|' + state + '⟩');
+  });
+}
+
+function setEqualSuperposition() {
+  currentState = 'superposition';
+  
+  // Equal amplitudes
+  amplitudes = {};
+  const numStates = Math.pow(2, numQubits);
+  const amplitude = 1 / Math.sqrt(numStates);
+  
+  for (let i = 0; i < numStates; i++) {
+    const binary = i.toString(2).padStart(numQubits, '0');
+    amplitudes[binary] = amplitude;
+  }
+  
+  updateVisualization();
+  document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('selected'));
+}
+
+function setBellState() {
+  if (numQubits !== 2) {
+    setQubitCount(2);
+  }
+  
+  currentState = 'bell';
+  amplitudes = {
+    '00': 1 / Math.sqrt(2),
+    '01': 0,
+    '10': 0,
+    '11': 1 / Math.sqrt(2)
+  };
+  
+  updateVisualization();
+  document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('selected'));
+}
+
+function setGHZState() {
+  if (numQubits !== 3) {
+    setQubitCount(3);
+  }
+  
+  currentState = 'ghz';
+  amplitudes = {
+    '000': 1 / Math.sqrt(2),
+    '001': 0,
+    '010': 0,
+    '011': 0,
+    '100': 0,
+    '101': 0,
+    '110': 0,
+    '111': 1 / Math.sqrt(2)
+  };
+  
+  updateVisualization();
+  document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('selected'));
+}
+
+function updateVisualization() {
+  // Update qubit visual
+  const visual = document.getElementById('qubit-visual');
+  visual.innerHTML = '';
+  
+  const isEntangled = currentState === 'bell' || currentState === 'ghz';
+  
+  for (let i = 0; i < numQubits; i++) {
+    const box = document.createElement('div');
+    box.className = 'qubit-box';
+    box.innerHTML = `
+      <div class="qubit-label">Q${i}</div>
+      <div class="qubit-state">?</div>
+      ${isEntangled ? '<div class="entangled-indicator">🔗</div>' : ''}
+    `;
+    visual.appendChild(box);
+    
+    if (i < numQubits - 1) {
+      const line = document.createElement('div');
+      line.className = 'connection-line';
+      visual.appendChild(line);
+    }
+  }
+  
+  // Update formula
+  let formula = '|ψ⟩ = ';
+  const terms = [];
+  
+  for (const [state, amp] of Object.entries(amplitudes)) {
+    if (Math.abs(amp) > 0.01) {
+      const ampStr = amp.toFixed(3);
+      terms.push(`${ampStr}|${state}⟩`);
+    }
+  }
+  
+  if (terms.length > 4) {
+    formula += `(${terms.slice(0, 3).join(' + ')} + ...)`;
+  } else {
+    formula += terms.join(' + ');
+  }
+  
+  document.getElementById('formula').textContent = formula;
+  
+  // Update info
+  const info = stateInfo[currentState] || stateInfo['00'];
+  document.getElementById('info-title').textContent = info.title;
+  document.getElementById('info-text').textContent = info.text;
+  
+  // Update state grid
+  const grid = document.getElementById('state-grid');
+  grid.innerHTML = '';
+  
+  for (const [state, amp] of Object.entries(amplitudes)) {
+    const prob = amp * amp * 100;
+    const row = document.createElement('div');
+    row.className = 'state-row';
+    row.innerHTML = `
+      <div class="state-label">|${state}⟩</div>
+      <div class="amp-bar-container">
+        <div class="amp-bar" style="width: ${prob}%"></div>
+        <div class="amp-value">${amp.toFixed(3)}</div>
+      </div>
+      <div class="prob-value">${prob.toFixed(1)}%</div>
+    `;
+    grid.appendChild(row);
+  }
+}
+
+// Initialize
+generateStateSelector();
+setBasisState('00');
+</script>
+
+</body>
+</html>

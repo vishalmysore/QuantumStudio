@@ -1,0 +1,455 @@
+
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f8f9fa;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b7280;
+    --color-text-tertiary: #9ca3af;
+    --color-border-primary: #d1d5db;
+    --color-border-secondary: #e5e7eb;
+    --color-border-tertiary: #f3f4f6;
+    --border-radius-md: 6px;
+    --border-radius-lg: 8px;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    font-family: var(--font-sans);
+    background: #fafbfc;
+    margin: 0;
+    padding: 20px;
+    color: var(--color-text-primary);
+  }
+  
+  .gv { 
+    font-family: var(--font-sans); 
+    padding: 1rem 0; 
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .step-nav { 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: wrap; 
+    margin-bottom: 1.5rem; 
+  }
+  
+  .step-btn { 
+    padding: 8px 16px; 
+    font-size: 14px; 
+    border: 1px solid var(--color-border-secondary); 
+    border-radius: var(--border-radius-md); 
+    background: var(--color-background-primary); 
+    color: var(--color-text-secondary); 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    font-weight: 400;
+  }
+  
+  .step-btn.active { 
+    background: #534AB7; 
+    color: white; 
+    border-color: #534AB7; 
+    font-weight: 500; 
+  }
+  
+  .step-btn:hover:not(.active) { 
+    background: var(--color-background-secondary); 
+    border-color: var(--color-border-primary);
+  }
+  
+  .panel { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 16px; 
+    margin-bottom: 1.5rem; 
+  }
+  
+  @media (max-width: 768px) {
+    .panel { grid-template-columns: 1fr; }
+  }
+  
+  .card { 
+    background: var(--color-background-primary); 
+    border: 1px solid var(--color-border-secondary); 
+    border-radius: var(--border-radius-lg); 
+    padding: 1.25rem 1.5rem; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .card-title { 
+    font-size: 12px; 
+    color: var(--color-text-secondary); 
+    margin: 0 0 16px; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+  }
+  
+  .state-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 10px; 
+  }
+  
+  .state-label { 
+    font-size: 14px; 
+    color: var(--color-text-primary); 
+    min-width: 40px; 
+    font-family: var(--font-mono); 
+    font-weight: 500;
+  }
+  
+  .bar-wrap { 
+    flex: 1; 
+    height: 24px; 
+    background: var(--color-background-secondary); 
+    border-radius: 4px; 
+    overflow: hidden; 
+    border: 1px solid var(--color-border-tertiary);
+  }
+  
+  .bar { 
+    height: 100%; 
+    border-radius: 3px; 
+    transition: width 0.5s ease, background 0.5s ease; 
+  }
+  
+  .bar.positive { 
+    background: linear-gradient(90deg, #534AB7 0%, #6B63C5 100%); 
+  }
+  
+  .bar.negative { 
+    background: linear-gradient(90deg, #D85A30 0%, #E67350 100%); 
+  }
+  
+  .prob-val { 
+    font-size: 13px; 
+    color: var(--color-text-secondary); 
+    min-width: 42px; 
+    text-align: right; 
+    font-family: var(--font-mono); 
+    font-weight: 500;
+  }
+  
+  .insight { 
+    background: #F0EDFF; 
+    border-left: 3px solid #534AB7; 
+    border-radius: var(--border-radius-md); 
+    padding: 16px 20px; 
+    margin-bottom: 1.5rem; 
+  }
+  
+  .insight p { 
+    margin: 0; 
+    font-size: 14px; 
+    color: var(--color-text-primary); 
+    line-height: 1.6; 
+  }
+  
+  .insight .tag { 
+    font-size: 11px; 
+    font-weight: 600; 
+    color: #534AB7; 
+    margin-bottom: 6px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.06em; 
+  }
+  
+  .phase-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .phase-box { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 8px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 13px; 
+    font-family: var(--font-mono); 
+    border: 2px solid var(--color-border-secondary); 
+    background: var(--color-background-primary); 
+    transition: all 0.4s; 
+    gap: 4px;
+  }
+  
+  .phase-box.marked { 
+    background: #FAECE7; 
+    border-color: #F0997B; 
+    color: #712B13; 
+    transform: scale(1.05);
+  }
+  
+  .phase-box.amplified { 
+    background: #EEEDFE; 
+    border-color: #AFA9EC; 
+    color: #3C3489; 
+    font-weight: 600; 
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(83, 74, 183, 0.2);
+  }
+  
+  .phase-box .idx { 
+    font-size: 10px; 
+    color: var(--color-text-tertiary); 
+    font-weight: 500;
+  }
+  
+  .nav-btns { 
+    display: flex; 
+    gap: 10px; 
+    margin-top: 1.5rem; 
+  }
+  
+  .nav-btn { 
+    padding: 10px 24px; 
+    border: 1px solid var(--color-border-secondary); 
+    border-radius: var(--border-radius-md); 
+    background: var(--color-background-primary); 
+    color: var(--color-text-primary); 
+    cursor: pointer; 
+    font-size: 14px; 
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .nav-btn:hover:not(:disabled) { 
+    background: var(--color-background-secondary); 
+    border-color: var(--color-border-primary);
+  }
+  
+  .nav-btn:disabled { 
+    opacity: 0.4; 
+    cursor: not-allowed; 
+  }
+  
+  .words-row { 
+    display: flex; 
+    gap: 10px; 
+    margin-bottom: 1.5rem; 
+    flex-wrap: wrap;
+  }
+  
+  .word-pill { 
+    padding: 8px 16px; 
+    border-radius: 20px; 
+    font-size: 14px; 
+    border: 1px solid var(--color-border-secondary); 
+    background: var(--color-background-primary); 
+    color: var(--color-text-secondary); 
+    transition: all 0.3s; 
+    font-weight: 500;
+  }
+  
+  .word-pill.target { 
+    background: #EEEDFE; 
+    border-color: #AFA9EC; 
+    color: #3C3489; 
+    font-weight: 600; 
+  }
+  
+  .word-pill.found { 
+    background: #E1F5EE; 
+    border-color: #5DCAA5; 
+    color: #085041; 
+    font-weight: 600; 
+    animation: pulse 0.5s ease-in-out;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  .section-label { 
+    font-size: 11px; 
+    color: var(--color-text-tertiary); 
+    text-transform: uppercase; 
+    letter-spacing: 0.06em; 
+    margin-bottom: 10px; 
+    font-weight: 600;
+  }
+</style>
+
+<div class="gv">
+  <div class="words-row" id="words-row">
+    <div class="word-pill" data-idx="0">apple |00⟩</div>
+    <div class="word-pill" data-idx="1">mango |01⟩</div>
+    <div class="word-pill target" data-idx="2">paneer |10⟩</div>
+    <div class="word-pill" data-idx="3">banana |11⟩</div>
+  </div>
+
+  <div class="step-nav" id="step-nav"></div>
+
+  <div class="insight" id="insight">
+    <div class="tag" id="insight-tag">Step 0</div>
+    <p id="insight-text">Two qubits initialized to |0⟩. We want to find "paneer" at index 2 = |10⟩. Classical search would check each item one by one — Grover's does it in one iteration.</p>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <div class="card-title">Amplitude of each state</div>
+      <div id="amplitudes"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Probability of measuring</div>
+      <div id="probabilities"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom: 1rem;">
+    <div class="card-title">Phase view</div>
+    <div class="section-label">Each box = one possible state. Purple = amplified. Orange = phase flipped.</div>
+    <div class="phase-row" id="phase-row"></div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Prev</button>
+    <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
+  </div>
+</div>
+
+<script>
+const states = ['|00⟩','|01⟩','|10⟩','|11⟩'];
+const words = ['apple','mango','paneer','banana'];
+const TARGET = 2;
+
+const steps = [
+  {
+    name: 'Init',
+    tag: 'Step 1 — initialize',
+    text: 'Both qubits start at |0⟩. The system is in state |00⟩ with 100% certainty. No superposition yet.',
+    amps: [1, 0, 0, 0],
+    phase: ['neutral','neutral','neutral','neutral'],
+    resultStep: false
+  },
+  {
+    name: 'Superposition',
+    tag: 'Step 2 — Hadamard gates',
+    text: 'Apply H to both qubits. Now all 4 states exist simultaneously with equal amplitude 0.5. This is quantum parallelism — the circuit "sees" all indexes at once.',
+    amps: [0.5, 0.5, 0.5, 0.5],
+    phase: ['neutral','neutral','neutral','neutral'],
+    resultStep: false
+  },
+  {
+    name: 'Oracle',
+    tag: 'Step 3 — Oracle marks |10⟩',
+    text: 'The oracle phase-flips |10⟩ (paneer). Amplitude becomes -0.5. You can\'t see this flip directly — but it\'s encoded in the phase. Probabilities look unchanged, but the sign matters for the next step.',
+    amps: [0.5, 0.5, -0.5, 0.5],
+    phase: ['neutral','neutral','marked','neutral'],
+    resultStep: false
+  },
+  {
+    name: 'Diffusion',
+    tag: 'Step 4 — Diffusion (inversion about mean)',
+    text: 'The diffusion operator inverts all amplitudes about their average. The negative amplitude at |10⟩ gets flipped to a large positive. All others shrink. |10⟩ now dominates with ~100% probability.',
+    amps: [0, 0, 1, 0],
+    phase: ['neutral','neutral','amplified','neutral'],
+    resultStep: false
+  },
+  {
+    name: 'Measure',
+    tag: 'Step 5 — Measurement',
+    text: 'Measurement collapses the superposition. With ~100% probability we get |10⟩ = index 2 = "paneer". Found in 1 iteration instead of checking all 4 items!',
+    amps: [0, 0, 1, 0],
+    phase: ['neutral','neutral','amplified','neutral'],
+    resultStep: true
+  }
+];
+
+let current = 0;
+
+function buildNav() {
+  const nav = document.getElementById('step-nav');
+  steps.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'step-btn' + (i === 0 ? ' active' : '');
+    b.textContent = s.name;
+    b.onclick = () => goTo(i);
+    nav.appendChild(b);
+  });
+}
+
+function render() {
+  const s = steps[current];
+  document.getElementById('insight-tag').textContent = s.tag;
+  document.getElementById('insight-text').textContent = s.text;
+
+  document.querySelectorAll('.step-btn').forEach((b, i) => {
+    b.className = 'step-btn' + (i === current ? ' active' : '');
+  });
+
+  const maxAmp = Math.max(...s.amps.map(Math.abs), 0.01);
+
+  const ampDiv = document.getElementById('amplitudes');
+  ampDiv.innerHTML = '';
+  s.amps.forEach((a, i) => {
+    const pct = Math.abs(a) / maxAmp * 100;
+    ampDiv.innerHTML += `
+      <div class="state-row">
+        <span class="state-label">${states[i]}</span>
+        <div class="bar-wrap"><div class="bar ${a < 0 ? 'negative' : 'positive'}" style="width:${pct}%"></div></div>
+        <span class="prob-val">${a.toFixed(2)}</span>
+      </div>`;
+  });
+
+  const probDiv = document.getElementById('probabilities');
+  probDiv.innerHTML = '';
+  s.amps.forEach((a, i) => {
+    const prob = Math.round(a * a * 100);
+    probDiv.innerHTML += `
+      <div class="state-row">
+        <span class="state-label">${states[i]}</span>
+        <div class="bar-wrap"><div class="bar positive" style="width:${prob}%"></div></div>
+        <span class="prob-val">${prob}%</span>
+      </div>`;
+  });
+
+  const phaseRow = document.getElementById('phase-row');
+  phaseRow.innerHTML = '';
+  s.phase.forEach((p, i) => {
+    const cls = p === 'marked' ? 'phase-box marked' : p === 'amplified' ? 'phase-box amplified' : 'phase-box';
+    const sign = s.amps[i] < 0 ? '−' : '+';
+    phaseRow.innerHTML += `
+      <div class="${cls}">
+        <span class="idx">${states[i]}</span>
+        <span>${sign}${Math.abs(s.amps[i]).toFixed(2)}</span>
+        <span class="idx">${words[i]}</span>
+      </div>`;
+    if (i < 3) phaseRow.innerHTML += `<div style="flex:1; height:1px; background:var(--color-border-tertiary)"></div>`;
+  });
+
+  const wordsRow = document.getElementById('words-row');
+  wordsRow.querySelectorAll('.word-pill').forEach((pill, i) => {
+    if (s.resultStep && i === TARGET) {
+      pill.className = 'word-pill found';
+    } else if (i === TARGET) {
+      pill.className = 'word-pill target';
+    } else {
+      pill.className = 'word-pill';
+    }
+  });
+
+  document.getElementById('prev-btn').disabled = current === 0;
+  document.getElementById('next-btn').disabled = current === steps.length - 1;
+}
+
+function goTo(i) { current = i; render(); }
+function navigate(dir) { current = Math.max(0, Math.min(steps.length - 1, current + dir)); render(); }
+
+buildNav();
+render();
+</script>

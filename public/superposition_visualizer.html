@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Superposition Visualizer - Quantum Studio</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    font-family: var(--font-sans);
+    background: #fafbfc;
+    margin: 0;
+    padding: 20px;
+    color: #1a1a1a;
+  }
+  
+  .container { 
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    font-size: 36px;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .header p {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .comparison { grid-template-columns: 1fr; }
+  }
+  
+  .side {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .side-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .classical { color: #6b7280; }
+  .quantum { color: #534AB7; }
+  
+  .bit-display {
+    background: #f8f9fa;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .bit-display.quantum-bg {
+    background: linear-gradient(135deg, #F0EDFF 0%, #EEEDFE 100%);
+    border-color: #AFA9EC;
+  }
+  
+  .bit-value {
+    font-size: 72px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  
+  .bit-label {
+    font-size: 14px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .probability-viz {
+    margin: 1.5rem 0;
+  }
+  
+  .prob-title {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  
+  .prob-bars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .prob-bar {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s;
+  }
+  
+  .prob-bar.active {
+    background: #E1F5EE;
+    border-color: #5DCAA5;
+    transform: scale(1.05);
+  }
+  
+  .prob-bar .value-label {
+    font-size: 24px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  
+  .prob-bar .percentage {
+    font-size: 16px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  .control-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+  }
+  
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+  }
+  
+  .slider-control {
+    margin-bottom: 1.5rem;
+  }
+  
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #6b7280;
+  }
+  
+  .slider-label strong {
+    color: #534AB7;
+    font-family: var(--font-mono);
+  }
+  
+  .slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #534AB7;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #534AB7;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .button-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  
+  .action-btn {
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .action-btn:hover {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+  }
+  
+  .info-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .info-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: #1a1a1a;
+  }
+  
+  .info-content {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #4b5563;
+  }
+  
+  .formula-box {
+    background: #F0EDFF;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    text-align: center;
+  }
+  
+  .formula {
+    font-size: 20px;
+    font-family: var(--font-mono);
+    color: #3C3489;
+    font-weight: 600;
+  }
+  
+  .wave-viz {
+    height: 120px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 16px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  canvas.wave {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1>⚛️ Quantum Superposition Visualizer</h1>
+    <p>See the difference between classical bits and quantum qubits</p>
+  </div>
+
+  <div class="comparison">
+    <div class="side">
+      <div class="side-title classical">
+        🔘 Classical Bit
+      </div>
+      
+      <div class="bit-display">
+        <div class="bit-value" id="classical-bit">0</div>
+        <div class="bit-label">Deterministic State</div>
+      </div>
+      
+      <div class="probability-viz">
+        <div class="prob-title">Measurement Outcome</div>
+        <div class="prob-bars">
+          <div class="prob-bar" id="classical-0">
+            <div class="value-label">|0⟩</div>
+            <div class="percentage">100%</div>
+          </div>
+          <div class="prob-bar" id="classical-1">
+            <div class="value-label">|1⟩</div>
+            <div class="percentage">0%</div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="font-size: 13px; color: #6b7280; line-height: 1.5;">
+        A classical bit is always in one definite state: either 0 OR 1. No ambiguity.
+      </div>
+    </div>
+    
+    <div class="side">
+      <div class="side-title quantum">
+        ⚛️ Quantum Qubit
+      </div>
+      
+      <div class="bit-display quantum-bg">
+        <div class="bit-value" style="color: #534AB7;">0 & 1</div>
+        <div class="bit-label" style="color: #534AB7;">Superposition State</div>
+      </div>
+      
+      <div class="probability-viz">
+        <div class="prob-title">Measurement Probabilities</div>
+        <div class="prob-bars">
+          <div class="prob-bar" id="quantum-0">
+            <div class="value-label">|0⟩</div>
+            <div class="percentage" id="prob-0-text">50%</div>
+          </div>
+          <div class="prob-bar" id="quantum-1">
+            <div class="value-label">|1⟩</div>
+            <div class="percentage" id="prob-1-text">50%</div>
+          </div>
+        </div>
+      </div>
+      
+      <div style="font-size: 13px; color: #6b7280; line-height: 1.5;">
+        A qubit can exist in superposition: both 0 AND 1 simultaneously until measured!
+      </div>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <div class="panel-title">⚙️ Control Qubit Superposition</div>
+    
+    <div class="slider-control">
+      <div class="slider-label">
+        <span>Probability of |0⟩: <strong id="prob-0-val">50%</strong></span>
+        <span>Probability of |1⟩: <strong id="prob-1-val">50%</strong></span>
+      </div>
+      <input type="range" class="slider" id="prob-slider" min="0" max="100" value="50" oninput="updateProbability(this.value)">
+    </div>
+    
+    <div class="button-group">
+      <button class="action-btn" onclick="setPreset(100, 0)">Pure |0⟩</button>
+      <button class="action-btn" onclick="setPreset(50, 50)">Equal Mix</button>
+      <button class="action-btn" onclick="setPreset(0, 100)">Pure |1⟩</button>
+      <button class="action-btn" onclick="setPreset(75, 25)">75% |0⟩</button>
+      <button class="action-btn" onclick="setPreset(25, 75)">25% |0⟩</button>
+      <button class="action-btn" onclick="simulateMeasure()">🎲 Measure!</button>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="info-title">📐 The Mathematics of Superposition</div>
+    <div class="info-content">
+      <p>A qubit in superposition can be written as:</p>
+      <div class="formula-box">
+        <div class="formula" id="state-formula">|ψ⟩ = 0.71|0⟩ + 0.71|1⟩</div>
+      </div>
+      <p>
+        Where <strong>α</strong> and <strong>β</strong> are complex probability amplitudes. 
+        The probability of measuring |0⟩ is <strong>|α|²</strong> and measuring |1⟩ is <strong>|β|²</strong>.
+        These probabilities must sum to 1: <strong>|α|² + |β|² = 1</strong>
+      </p>
+      
+      <h4 style="margin-top: 1.5rem;">🌊 Wave Function Visualization</h4>
+      <p style="margin-bottom: 10px; font-size: 13px; color: #6b7280;">
+        Before measurement, the qubit exists as a probability wave:
+      </p>
+      <canvas id="waveCanvas" class="wave" width="900" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+let prob0 = 50;
+let prob1 = 50;
+
+function updateProbability(value) {
+  prob0 = parseInt(value);
+  prob1 = 100 - prob0;
+  
+  document.getElementById('prob-0-val').textContent = prob0 + '%';
+  document.getElementById('prob-1-val').textContent = prob1 + '%';
+  document.getElementById('prob-0-text').textContent = prob0 + '%';
+  document.getElementById('prob-1-text').textContent = prob1 + '%';
+  
+  // Update formula
+  const alpha = Math.sqrt(prob0 / 100);
+  const beta = Math.sqrt(prob1 / 100);
+  document.getElementById('state-formula').textContent = 
+    `|ψ⟩ = ${alpha.toFixed(2)}|0⟩ + ${beta.toFixed(2)}|1⟩`;
+  
+  drawWave();
+}
+
+function setPreset(p0, p1) {
+  document.getElementById('prob-slider').value = p0;
+  updateProbability(p0);
+}
+
+function simulateMeasure() {
+  const rand = Math.random() * 100;
+  const result = rand < prob0 ? 0 : 1;
+  
+  // Highlight classical bit
+  const classicalBit = document.getElementById('classical-bit');
+  classicalBit.textContent = result;
+  classicalBit.style.color = result === 0 ? '#10b981' : '#f59e0b';
+  setTimeout(() => {
+    classicalBit.style.color = '#1a1a1a';
+  }, 1000);
+  
+  // Highlight quantum result
+  const q0 = document.getElementById('quantum-0');
+  const q1 = document.getElementById('quantum-1');
+  q0.classList.remove('active');
+  q1.classList.remove('active');
+  
+  if (result === 0) {
+    q0.classList.add('active');
+    setTimeout(() => q0.classList.remove('active'), 1500);
+  } else {
+    q1.classList.add('active');
+    setTimeout(() => q1.classList.remove('active'), 1500);
+  }
+  
+  // Update classical probability bars
+  const c0 = document.getElementById('classical-0');
+  const c1 = document.getElementById('classical-1');
+  c0.classList.remove('active');
+  c1.classList.remove('active');
+  
+  if (result === 0) {
+    c0.classList.add('active');
+    c0.querySelector('.percentage').textContent = '100%';
+    c1.querySelector('.percentage').textContent = '0%';
+    setTimeout(() => {
+      c0.classList.remove('active');
+      c0.querySelector('.percentage').textContent = '100%';
+    }, 1500);
+  } else {
+    c1.classList.add('active');
+    c0.querySelector('.percentage').textContent = '0%';
+    c1.querySelector('.percentage').textContent = '100%';
+    setTimeout(() => {
+      c1.classList.remove('active');
+      c1.querySelector('.percentage').textContent = '100%';
+    }, 1500);
+  }
+}
+
+function drawWave() {
+  const canvas = document.getElementById('waveCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  
+  ctx.clearRect(0, 0, W, H);
+  
+  const alpha = Math.sqrt(prob0 / 100);
+  const beta = Math.sqrt(prob1 / 100);
+  
+  // Draw wave for |0⟩
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let x = 0; x < W; x++) {
+    const y = H/2 - alpha * 40 * Math.sin((x / W) * 4 * Math.PI);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  
+  // Draw wave for |1⟩
+  ctx.strokeStyle = '#f59e0b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let x = 0; x < W; x++) {
+    const y = H/2 - beta * 40 * Math.sin((x / W) * 4 * Math.PI + Math.PI/3);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  
+  // Center line
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(0, H/2);
+  ctx.lineTo(W, H/2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Labels
+  ctx.fillStyle = '#10b981';
+  ctx.font = '12px Inter';
+  ctx.fillText('|0⟩ wave', 10, 20);
+  
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillText('|1⟩ wave', 10, 40);
+}
+
+// Initialize
+updateProbability(50);
+</script>
+
+</body>
+</html>

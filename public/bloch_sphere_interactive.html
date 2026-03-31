@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Bloch Sphere - Quantum Studio</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    font-family: var(--font-sans);
+    background: #fafbfc;
+    margin: 0;
+    padding: 20px;
+    color: #1a1a1a;
+  }
+  
+  .container { 
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    font-size: 36px;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .header p {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .main-content {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 968px) {
+    .main-content { grid-template-columns: 1fr; }
+  }
+  
+  .bloch-container {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  canvas {
+    border-radius: 8px;
+    cursor: grab;
+  }
+  
+  canvas:active {
+    cursor: grabbing;
+  }
+  
+  .controls {
+    width: 100%;
+    max-width: 500px;
+    margin-top: 1.5rem;
+  }
+  
+  .control-section {
+    margin-bottom: 1.5rem;
+  }
+  
+  .control-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    display: block;
+  }
+  
+  .gate-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  
+  .gate-btn {
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+  }
+  
+  .gate-btn:hover {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(83, 74, 183, 0.15);
+  }
+  
+  .gate-btn.h { background: #EEEDFE; border-color: #AFA9EC; color: #3C3489; }
+  .gate-btn.x { background: #FAECE7; border-color: #F0997B; color: #712B13; }
+  .gate-btn.y { background: #FEF3E7; border-color: #F9C074; color: #7C4701; }
+  .gate-btn.z { background: #E7F3FE; border-color: #74B9F9; color: #014A7C; }
+  
+  .slider-control {
+    margin-bottom: 1.5rem;
+  }
+  
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    font-family: var(--font-mono);
+  }
+  
+  .slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #534AB7;
+    cursor: pointer;
+  }
+  
+  .slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #534AB7;
+    cursor: pointer;
+    border: none;
+  }
+  
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .card { 
+    background: white; 
+    border: 1px solid #e5e7eb; 
+    border-radius: 8px; 
+    padding: 1.25rem 1.5rem; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .card-title { 
+    font-size: 12px; 
+    color: #6b7280; 
+    margin: 0 0 16px; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+  }
+  
+  .state-display {
+    background: #F0EDFF;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  
+  .state-formula {
+    font-size: 24px;
+    font-family: var(--font-mono);
+    color: #3C3489;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  .state-details {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  
+  .coord-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  
+  .coord-row:last-child {
+    border-bottom: none;
+  }
+  
+  .coord-label {
+    color: #6b7280;
+    font-weight: 600;
+  }
+  
+  .coord-value {
+    color: #1a1a1a;
+  }
+  
+  .action-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+  }
+  
+  .action-btn:hover {
+    background: #f8f9fa;
+  }
+  
+  .action-btn.primary {
+    background: #534AB7;
+    color: white;
+    border-color: #534AB7;
+  }
+  
+  .action-btn.primary:hover {
+    background: #3C3489;
+  }
+  
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .preset-btn {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  
+  .preset-btn:hover {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+  }
+  
+  .info-box {
+    background: #E1F5EE;
+    border-left: 3px solid #10b981;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #1a1a1a;
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1>🌐 Interactive Bloch Sphere</h1>
+    <p>Visualize quantum states in 3D - Apply gates and see real-time changes</p>
+  </div>
+
+  <div class="main-content">
+    <div class="bloch-container">
+      <canvas id="blochCanvas" width="500" height="500"></canvas>
+      
+      <div class="controls">
+        <div class="control-section">
+          <span class="control-label">Apply Quantum Gates</span>
+          <div class="gate-grid">
+            <button class="gate-btn h" onclick="applyGate('H')">H</button>
+            <button class="gate-btn x" onclick="applyGate('X')">X</button>
+            <button class="gate-btn y" onclick="applyGate('Y')">Y</button>
+            <button class="gate-btn z" onclick="applyGate('Z')">Z</button>
+          </div>
+        </div>
+        
+        <div class="slider-control">
+          <div class="slider-label">
+            <span>Theta (θ): <strong id="theta-val">0.00</strong></span>
+            <span>0 to π</span>
+          </div>
+          <input type="range" class="slider" id="theta-slider" min="0" max="314" value="0" oninput="updateTheta(this.value)">
+        </div>
+        
+        <div class="slider-control">
+          <div class="slider-label">
+            <span>Phi (φ): <strong id="phi-val">0.00</strong></span>
+            <span>0 to 2π</span>
+          </div>
+          <input type="range" class="slider" id="phi-slider" min="0" max="628" value="0" oninput="updatePhi(this.value)">
+        </div>
+      </div>
+    </div>
+    
+    <div class="sidebar">
+      <div class="card">
+        <div class="card-title">Current Quantum State</div>
+        <div class="state-display">
+          <div class="state-formula" id="state-formula">|0⟩</div>
+          <div class="state-details">North Pole of Bloch Sphere</div>
+        </div>
+        
+        <div class="coord-row">
+          <span class="coord-label">X:</span>
+          <span class="coord-value" id="coord-x">0.00</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-label">Y:</span>
+          <span class="coord-value" id="coord-y">0.00</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-label">Z:</span>
+          <span class="coord-value" id="coord-z">1.00</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-label">θ (theta):</span>
+          <span class="coord-value" id="coord-theta">0.00</span>
+        </div>
+        <div class="coord-row">
+          <span class="coord-label">φ (phi):</span>
+          <span class="coord-value" id="coord-phi">0.00</span>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-title">Quick Presets</div>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="setState(0, 0)">|0⟩<br>North</button>
+          <button class="preset-btn" onclick="setState(Math.PI, 0)">|1⟩<br>South</button>
+          <button class="preset-btn" onclick="setState(Math.PI/2, 0)">|+⟩<br>+X</button>
+          <button class="preset-btn" onclick="setState(Math.PI/2, Math.PI)">|−⟩<br>−X</button>
+          <button class="preset-btn" onclick="setState(Math.PI/2, Math.PI/2)">|+i⟩<br>+Y</button>
+          <button class="preset-btn" onclick="setState(Math.PI/2, 3*Math.PI/2)">|−i⟩<br>−Y</button>
+        </div>
+      </div>
+      
+      <div class="card">
+        <button class="action-btn primary" onclick="randomState()">🎲 Random State</button>
+        <button class="action-btn" onclick="resetState()">↺ Reset to |0⟩</button>
+      </div>
+      
+      <div class="info-box">
+        💡 <strong>Tip:</strong> Drag the sphere to rotate the view! The purple dot shows your qubit's quantum state.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('blochCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width;
+const H = canvas.height;
+const centerX = W / 2;
+const centerY = H / 2;
+const radius = 180;
+
+let theta = 0;  // Polar angle (0 to π)
+let phi = 0;    // Azimuthal angle (0 to 2π)
+let rotX = 0.4;
+let rotY = 0.4;
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+// Quantum state (alpha, beta coefficients)
+let alpha = [1, 0];  // Complex number [real, imag]
+let beta = [0, 0];
+
+// Mouse controls
+canvas.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    rotY += dx * 0.01;
+    rotX += dy * 0.01;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    draw();
+  }
+});
+
+canvas.addEventListener('mouseup', () => isDragging = false);
+canvas.addEventListener('mouseleave', () => isDragging = false);
+
+function project3D(x, y, z) {
+  // Apply rotation
+  let x1 = x * Math.cos(rotY) + z * Math.sin(rotY);
+  let z1 = -x * Math.sin(rotY) + z * Math.cos(rotY);
+  let y2 = y * Math.cos(rotX) - z1 * Math.sin(rotX);
+  let z2 = y * Math.sin(rotX) + z1 * Math.cos(rotX);
+  
+  return {
+    x: centerX + x1 * radius,
+    y: centerY - y2 * radius,
+    z: z2
+  };
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  
+  // Draw axes behind sphere
+  drawAxis(-1.3, 0, 0, 1.3, 0, 0, 'rgba(239, 68, 68, 0.3)', 'X');
+  drawAxis(0, -1.3, 0, 0, 1.3, 0, 'rgba(245, 158, 11, 0.3)', 'Y');
+  
+  // Draw wireframe sphere
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.15)';
+  ctx.lineWidth = 1;
+  
+  // Latitude circles
+  for (let lat = -Math.PI/2; lat <= Math.PI/2; lat += Math.PI/4) {
+    ctx.beginPath();
+    for (let lon = 0; lon <= 2 * Math.PI; lon += 0.1) {
+      const x = Math.cos(lat) * Math.cos(lon);
+      const y = Math.sin(lat);
+      const z = Math.cos(lat) * Math.sin(lon);
+      const p = project3D(x, y, z);
+      if (lon === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+  
+  // Longitude circles
+  for (let lon = 0; lon < 2 * Math.PI; lon += Math.PI/4) {
+    ctx.beginPath();
+    for (let lat = -Math.PI/2; lat <= Math.PI/2; lat += 0.1) {
+      const x = Math.cos(lat) * Math.cos(lon);
+      const y = Math.sin(lat);
+      const z = Math.cos(lat) * Math.sin(lon);
+      const p = project3D(x, y, z);
+      if (lat === -Math.PI/2) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
+  
+  // Draw Z axis (in front)
+  drawAxis(0, 0, -1.3, 0, 0, 1.3, 'rgba(59, 130, 246, 0.4)', 'Z');
+  
+  // Outer sphere outline
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+  ctx.stroke();
+  
+  // Draw state vector
+  const x = Math.sin(theta) * Math.cos(phi);
+  const y = Math.sin(theta) * Math.sin(phi);
+  const z = Math.cos(theta);
+  
+  const statePoint = project3D(x, y, z);
+  
+  // Line from center to state
+  ctx.strokeStyle = '#a78bfa';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.lineTo(statePoint.x, statePoint.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // State point
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = '#a78bfa';
+  ctx.fillStyle = '#a78bfa';
+  ctx.beginPath();
+  ctx.arc(statePoint.x, statePoint.y, 8, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  
+  updateStateDisplay();
+}
+
+function drawAxis(x1, y1, z1, x2, y2, z2, color, label) {
+  const p1 = project3D(x1, y1, z1);
+  const p2 = project3D(x2, y2, z2);
+  
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.stroke();
+  
+  // Label
+  if (p2.z > 0) {
+    ctx.fillStyle = color.replace('0.3', '1').replace('0.4', '1');
+    ctx.font = 'bold 14px Inter';
+    ctx.fillText(label, p2.x + 10, p2.y + 5);
+  }
+}
+
+function updateStateDisplay() {
+  // Calculate complex amplitudes from theta, phi
+  alpha = [Math.cos(theta / 2), 0];
+  beta = [Math.sin(theta / 2) * Math.cos(phi), Math.sin(theta / 2) * Math.sin(phi)];
+  
+  // Bloch coordinates
+  const x = Math.sin(theta) * Math.cos(phi);
+  const y = Math.sin(theta) * Math.sin(phi);
+  const z = Math.cos(theta);
+  
+  document.getElementById('coord-x').textContent = x.toFixed(3);
+  document.getElementById('coord-y').textContent = y.toFixed(3);
+  document.getElementById('coord-z').textContent = z.toFixed(3);
+  document.getElementById('coord-theta').textContent = theta.toFixed(3);
+  document.getElementById('coord-phi').textContent = phi.toFixed(3);
+  
+  // State formula
+  let formula = '';
+  const a = alpha[0];
+  const b_real = beta[0];
+  const b_imag = beta[1];
+  
+  if (Math.abs(theta) < 0.01) {
+    formula = '|0⟩';
+  } else if (Math.abs(theta - Math.PI) < 0.01) {
+    formula = '|1⟩';
+  } else if (Math.abs(theta - Math.PI/2) < 0.01 && Math.abs(phi) < 0.01) {
+    formula = '|+⟩';
+  } else if (Math.abs(theta - Math.PI/2) < 0.01 && Math.abs(phi - Math.PI) < 0.01) {
+    formula = '|−⟩';
+  } else {
+    const a_str = a.toFixed(2);
+    const b_mag = Math.sqrt(b_real * b_real + b_imag * b_imag).toFixed(2);
+    const phase = Math.atan2(b_imag, b_real);
+    
+    if (Math.abs(b_imag) < 0.01) {
+      formula = `${a_str}|0⟩ + ${b_mag}|1⟩`;
+    } else if (Math.abs(phase - Math.PI/2) < 0.1) {
+      formula = `${a_str}|0⟩ + ${b_mag}i|1⟩`;
+    } else {
+      formula = `${a_str}|0⟩ + ${b_mag}e^(i${phase.toFixed(2)})|1⟩`;
+    }
+  }
+  
+  document.getElementById('state-formula').textContent = formula;
+}
+
+function updateTheta(val) {
+  theta = (val / 100) * Math.PI;
+  document.getElementById('theta-val').textContent = theta.toFixed(2);
+  draw();
+}
+
+function updatePhi(val) {
+  phi = (val / 100) * Math.PI;
+  document.getElementById('phi-val').textContent = phi.toFixed(2);
+  draw();
+}
+
+function setState(t, p) {
+  theta = t;
+  phi = p;
+  document.getElementById('theta-slider').value = Math.round((theta / Math.PI) * 100);
+  document.getElementById('phi-slider').value = Math.round((phi / Math.PI) * 100);
+  document.getElementById('theta-val').textContent = theta.toFixed(2);
+  document.getElementById('phi-val').textContent = phi.toFixed(2);
+  draw();
+}
+
+function applyGate(gate) {
+  const cos_t2 = Math.cos(theta / 2);
+  const sin_t2 = Math.sin(theta / 2);
+  const cos_p = Math.cos(phi);
+  const sin_p = Math.sin(phi);
+  
+  let new_theta = theta;
+  let new_phi = phi;
+  
+  if (gate === 'H') {
+    // Hadamard transforms |0⟩ to |+⟩ and vice versa
+    if (Math.abs(theta) < 0.01) {
+      new_theta = Math.PI / 2;
+      new_phi = 0;
+    } else if (Math.abs(theta - Math.PI/2) < 0.01 && Math.abs(phi) < 0.01) {
+      new_theta = 0;
+      new_phi = 0;
+    } else {
+      // General case: rotate around X+Z axis
+      new_theta = Math.acos(Math.sin(theta) * cos_p);
+      new_phi = Math.atan2(-Math.cos(theta), Math.sin(theta) * sin_p);
+      if (new_phi < 0) new_phi += 2 * Math.PI;
+    }
+  } else if (gate === 'X') {
+    // 180° rotation around X-axis
+    new_theta = Math.PI - theta;
+    new_phi = -phi;
+    if (new_phi < 0) new_phi += 2 * Math.PI;
+  } else if (gate === 'Y') {
+    // 180° rotation around Y-axis
+    new_theta = Math.PI - theta;
+    new_phi = Math.PI - phi;
+    if (new_phi < 0) new_phi += 2 * Math.PI;
+    if (new_phi > 2 * Math.PI) new_phi -= 2 * Math.PI;
+  } else if (gate === 'Z') {
+    // 180° rotation around Z-axis (phase flip)
+    new_phi = phi + Math.PI;
+    if (new_phi > 2 * Math.PI) new_phi -= 2 * Math.PI;
+  }
+  
+  setState(new_theta, new_phi);
+}
+
+function randomState() {
+  const t = Math.random() * Math.PI;
+  const p = Math.random() * 2 * Math.PI;
+  setState(t, p);
+}
+
+function resetState() {
+  setState(0, 0);
+}
+
+// Initial draw
+draw();
+</script>
+
+</body>
+</html>

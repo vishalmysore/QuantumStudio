@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Gate Transformer - Quantum Studio</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    font-family: var(--font-sans);
+    background: #fafbfc;
+    margin: 0;
+    padding: 20px;
+    color: #1a1a1a;
+  }
+  
+  .container { 
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    font-size: 36px;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .header p {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+  }
+  
+  .layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+  }
+  
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  
+  .gate-panel {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .panel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+  }
+  
+  .gate-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .gate-btn {
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+    text-align: center;
+  }
+  
+  .gate-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  }
+  
+  .gate-btn.h { background: #EEEDFE; border-color: #AFA9EC; color: #3C3489; }
+  .gate-btn.x { background: #FAECE7; border-color: #F0997B; color: #712B13; }
+  .gate-btn.y { background: #FEF3E7; border-color: #F9C074; color: #7C4701; }
+  .gate-btn.z { background: #E7F3FE; border-color: #74B9F9; color: #014A7C; }
+  .gate-btn.s { background: #E1F5EE; border-color: #5DCAA5; color: #085041; }
+  .gate-btn.t { background: #F0E7FE; border-color: #C79AEC; color: #481D7C; }
+  
+  .gate-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    min-height: 200px;
+  }
+  
+  .gate-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #534AB7;
+    margin-bottom: 8px;
+  }
+  
+  .gate-desc {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  
+  .gate-matrix {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+  }
+  
+  .matrix-title {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  
+  .initial-state {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-top: 16px;
+  }
+  
+  .state-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  
+  .state-option {
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  
+  .state-option.selected {
+    background: #534AB7;
+    color: white;
+    border-color: #534AB7;
+  }
+  
+  .state-option:hover:not(.selected) {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+  }
+  
+  .transformation {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .transform-flow {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .state-box {
+    background: #f8f9fa;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+  
+  .state-box.result {
+    background: #F0EDFF;
+    border-color: #AFA9EC;
+  }
+  
+  .state-title {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  
+  .state-value {
+    font-size: 28px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+  
+  .state-note {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  
+  .arrow {
+    font-size: 32px;
+    color: #534AB7;
+  }
+  
+  .gate-box {
+    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .gate-box .label {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+  }
+  
+  .gate-box .name {
+    font-size: 32px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+  
+  .probability-viz {
+    margin-bottom: 2rem;
+  }
+  
+  .prob-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+  }
+  
+  .prob-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  
+  .prob-side {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+  }
+  
+  .prob-side.after {
+    background: #F0EDFF;
+  }
+  
+  .prob-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  
+  .prob-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .prob-bar-label {
+    font-size: 16px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    min-width: 40px;
+  }
+  
+  .prob-bar-container {
+    flex: 1;
+    height: 28px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .prob-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  
+  .prob-bar.zero { background: linear-gradient(90deg, #10b981 0%, #5DCAA5 100%); }
+  .prob-bar.one { background: linear-gradient(90deg, #f59e0b 0%, #F9C074 100%); }
+  
+  .prob-percent {
+    font-size: 14px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    min-width: 50px;
+    text-align: right;
+  }
+  
+  .action-section {
+    text-align: center;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .apply-btn {
+    padding: 14px 32px;
+    border: 2px solid #534AB7;
+    border-radius: 8px;
+    background: #534AB7;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s;
+    margin: 0 8px;
+  }
+  
+  .apply-btn:hover {
+    background: #3C3489;
+    border-color: #3C3489;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(83, 74, 183, 0.3);
+  }
+  
+  .apply-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  .reset-btn {
+    padding: 14px 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .reset-btn:hover {
+    background: #f8f9fa;
+  }
+  
+  .history {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-top: 24px;
+  }
+  
+  .history-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+  }
+  
+  .history-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .history-item {
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+</style>
+
+<div class="container">
+  <div class="header">
+    <h1>🎛️ Quantum Gate Transformer</h1>
+    <p>Apply gates and watch quantum states transform in real-time</p>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="gate-panel">
+        <div class="panel-title">Select a Quantum Gate</div>
+        <div class="gate-grid">
+          <button class="gate-btn h" onclick="selectGate('H', 'Hadamard', 'Creates superposition. Transforms |0⟩ ↔ |+⟩ and |1⟩ ↔ |−⟩', '1/√2 [ 1   1 ]\\n      [ 1  -1 ]')">H</button>
+          <button class="gate-btn x" onclick="selectGate('X', 'Pauli-X (NOT)', 'Quantum NOT gate. Flips |0⟩ ↔ |1⟩', '[ 0  1 ]\\n[ 1  0 ]')">X</button>
+          <button class="gate-btn y" onclick="selectGate('Y', 'Pauli-Y', 'Rotation around Y-axis. Flips with phase shift.', '[ 0  -i ]\\n[ i   0 ]')">Y</button>
+          <button class="gate-btn z" onclick="selectGate('Z', 'Pauli-Z', 'Phase flip. Leaves |0⟩ unchanged, flips sign of |1⟩.', '[ 1   0 ]\\n[ 0  -1 ]')">Z</button>
+          <button class="gate-btn s" onclick="selectGate('S', 'Phase (S)', 'Quarter turn on Bloch sphere. Adds π/2 phase to |1⟩.', '[ 1  0 ]\\n[ 0  i ]')">S</button>
+          <button class="gate-btn t" onclick="selectGate('T', 'π/8 Gate (T)', 'Eighth turn. Adds π/4 phase to |1⟩.', '[ 1      0     ]\\n[ 0  e^(iπ/4) ]')">T</button>
+        </div>
+        
+        <div class="gate-info" id="gate-info">
+          <div class="gate-name">Select a gate above</div>
+          <div class="gate-desc">Click any gate to see its description and matrix representation.</div>
+        </div>
+      </div>
+      
+      <div class="initial-state">
+        <div class="panel-title">Initial State</div>
+        <div class="state-options">
+          <button class="state-option selected" onclick="setInitialState('|0⟩')">|0⟩</button>
+          <button class="state-option" onclick="setInitialState('|1⟩')">|1⟩</button>
+          <button class="state-option" onclick="setInitialState('|+⟩')">|+⟩</button>
+          <button class="state-option" onclick="setInitialState('|−⟩')">|−⟩</button>
+        </div>
+      </div>
+    </div>
+    
+    <div>
+      <div class="transformation" id="transformation">
+        <div class="transform-flow">
+          <div class="state-box">
+            <div class="state-title">Initial State</div>
+            <div class="state-value" id="initial-value">|0⟩</div>
+            <div class="state-note">Start here</div>
+          </div>
+          
+          <div class="arrow">→</div>
+          
+          <div class="gate-box" id="gate-visual">
+            <div class="label">APPLY</div>
+            <div class="name" id="gate-name">?</div>
+          </div>
+          
+          <div class="arrow">→</div>
+          
+          <div class="state-box result">
+            <div class="state-title">Result State</div>
+            <div class="state-value" id="result-value">?</div>
+            <div class="state-note">After transformation</div>
+          </div>
+        </div>
+        
+        <div class="probability-viz">
+          <div class="prob-title">Measurement Probabilities</div>
+          <div class="prob-comparison">
+            <div class="prob-side">
+              <div class="prob-label">Before</div>
+              <div class="prob-bar-row">
+                <div class="prob-bar-label">|0⟩</div>
+                <div class="prob-bar-container">
+                  <div class="prob-bar zero" id="before-0" style="width: 100%"></div>
+                </div>
+                <div class="prob-percent" id="before-0-pct">100%</div>
+              </div>
+              <div class="prob-bar-row">
+                <div class="prob-bar-label">|1⟩</div>
+                <div class="prob-bar-container">
+                  <div class="prob-bar one" id="before-1" style="width: 0%"></div>
+                </div>
+                <div class="prob-percent" id="before-1-pct">0%</div>
+              </div>
+            </div>
+            
+            <div class="prob-side after">
+              <div class="prob-label">After</div>
+              <div class="prob-bar-row">
+                <div class="prob-bar-label">|0⟩</div>
+                <div class="prob-bar-container">
+                  <div class="prob-bar zero" id="after-0" style="width: 0%"></div>
+                </div>
+                <div class="prob-percent" id="after-0-pct">—</div>
+              </div>
+              <div class="prob-bar-row">
+                <div class="prob-bar-label">|1⟩</div>
+                <div class="prob-bar-container">
+                  <div class="prob-bar one" id="after-1" style="width: 0%"></div>
+                </div>
+                <div class="prob-percent" id="after-1-pct">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="action-section">
+          <button class="apply-btn" id="apply-btn" onclick="applyTransformation()" disabled>
+            Apply Gate
+          </button>
+          <button class="reset-btn" onclick="reset()">↺ Reset</button>
+        </div>
+      </div>
+      
+      <div class="history">
+        <div class="history-title">Gate Sequence History</div>
+        <div class="history-list" id="history-list">
+          <div style="color: #6b7280; font-size: 13px;">No gates applied yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentGate = null;
+let initialState = '|0⟩';
+let currentState = '|0⟩';
+let history = [];
+
+const stateVectors = {
+  '|0⟩': [1, 0],
+  '|1⟩': [0, 1],
+  '|+⟩': [1/Math.sqrt(2), 1/Math.sqrt(2)],
+  '|−⟩': [1/Math.sqrt(2), -1/Math.sqrt(2)]
+};
+
+const gates = {
+  'H': { 
+    matrix: [[1/Math.sqrt(2), 1/Math.sqrt(2)], [1/Math.sqrt(2), -1/Math.sqrt(2)]],
+    transform: {
+      '|0⟩': '|+⟩',
+      '|1⟩': '|−⟩',
+      '|+⟩': '|0⟩',
+      '|−⟩': '|1⟩'
+    }
+  },
+  'X': {
+    matrix: [[0, 1], [1, 0]],
+    transform: {
+      '|0⟩': '|1⟩',
+      '|1⟩': '|0⟩',
+      '|+⟩': '|+⟩',
+      '|−⟩': '|−⟩'
+    }
+  },
+  'Y': {
+    matrix: [[0, -1], [1, 0]], // Simplified (missing i)
+    transform: {
+      '|0⟩': '|1⟩',
+      '|1⟩': '|0⟩',
+      '|+⟩': '|−⟩',
+      '|−⟩': '|+⟩'
+    }
+  },
+  'Z': {
+    matrix: [[1, 0], [0, -1]],
+    transform: {
+      '|0⟩': '|0⟩',
+      '|1⟩': '|1⟩',
+      '|+⟩': '|−⟩',
+      '|−⟩': '|+⟩'
+    }
+  },
+  'S': {
+    matrix: [[1, 0], [0, 1]], // Simplified
+    transform: {
+      '|0⟩': '|0⟩',
+      '|1⟩': '|1⟩',
+      '|+⟩': '|+i⟩',
+      '|−⟩': '|−i⟩'
+    }
+  },
+  'T': {
+    matrix: [[1, 0], [0, 1]], // Simplified
+    transform: {
+      '|0⟩': '|0⟩',
+      '|1⟩': '|1⟩',
+      '|+⟩': '~|+⟩',
+      '|−⟩': '~|−⟩'
+    }
+  }
+};
+
+function selectGate(symbol, name, desc, matrix) {
+  currentGate = symbol;
+  
+  document.getElementById('gate-info').innerHTML = `
+    <div class="gate-name">${name}</div>
+    <div class="gate-desc">${desc}</div>
+    <div class="gate-matrix">
+      <div class="matrix-title">Matrix Representation</div>
+      <pre style="margin: 0; font-size: 14px;">${matrix}</pre>
+    </div>
+  `;
+  
+  document.getElementById('gate-name').textContent = symbol;
+  document.getElementById('apply-btn').disabled = false;
+  
+  // Preview result
+  const result = gates[symbol].transform[currentState];
+  document.getElementById('result-value').textContent = result;
+  
+  // Calculate probabilities
+  const resultVector = stateVectors[result] || [0.5, 0.5];
+  const prob0 = Math.round(resultVector[0] * resultVector[0] * 100);
+  const prob1 = Math.round(resultVector[1] * resultVector[1] * 100);
+  
+  document.getElementById('after-0').style.width = prob0 + '%';
+  document.getElementById('after-1').style.width = prob1 + '%';
+  document.getElementById('after-0-pct').textContent = prob0 + '%';
+  document.getElementById('after-1-pct').textContent = prob1 + '%';
+}
+
+function setInitialState(state) {
+  initialState = state;
+  currentState = state;
+  
+  document.querySelectorAll('.state-option').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === state);
+  });
+  
+  document.getElementById('initial-value').textContent = state;
+  
+  const vector = stateVectors[state];
+  const prob0 = Math.round(vector[0] * vector[0] * 100);
+  const prob1 = Math.round(vector[1] * vector[1] * 100);
+  
+  document.getElementById('before-0').style.width = prob0 + '%';
+  document.getElementById('before-1').style.width = prob1 + '%';
+  document.getElementById('before-0-pct').textContent = prob0 + '%';
+  document.getElementById('before-1-pct').textContent = prob1 + '%';
+  
+  if (currentGate) {
+    selectGate(currentGate, '', '', '');
+    document.querySelectorAll('.gate-btn').forEach(btn => {
+      if (btn.textContent === currentGate) btn.click();
+    });
+  }
+}
+
+function applyTransformation() {
+  if (!currentGate) return;
+  
+  const result = gates[currentGate].transform[currentState];
+  currentState = result;
+  history.push(currentGate);
+  
+  // Update history
+  updateHistory();
+  
+  // Update initial state to result
+  setInitialState(result);
+  
+  // Reset gate selection
+  currentGate = null;
+  document.getElementById('gate-name').textContent = '?';
+  document.getElementById('result-value').textContent = '?';
+  document.getElementById('apply-btn').disabled = true;
+  
+  document.getElementById('after-0').style.width = '0%';
+  document.getElementById('after-1').style.width = '0%';
+  document.getElementById('after-0-pct').textContent = '—';
+  document.getElementById('after-1-pct').textContent = '—';
+}
+
+function updateHistory() {
+  const list = document.getElementById('history-list');
+  if (history.length === 0) {
+    list.innerHTML = '<div style="color: #6b7280; font-size: 13px;">No gates applied yet</div>';
+    return;
+  }
+  
+  list.innerHTML = history.map(gate => 
+    `<div class="history-item">${gate}</div>`
+  ).join('');
+}
+
+function reset() {
+  currentState = '|0⟩';
+  initialState = '|0⟩';
+  currentGate = null;
+  history = [];
+  
+  setInitialState('|0⟩');
+  updateHistory();
+  
+  document.getElementById('gate-name').textContent = '?';
+  document.getElementById('result-value').textContent = '?';
+  document.getElementById('apply-btn').disabled = true;
+  
+  document.getElementById('gate-info').innerHTML = `
+    <div class="gate-name">Select a gate above</div>
+    <div class="gate-desc">Click any gate to see its description and matrix representation.</div>
+  `;
+  
+  document.getElementById('after-0').style.width = '0%';
+  document.getElementById('after-1').style.width = '0%';
+  document.getElementById('after-0-pct').textContent = '—';
+  document.getElementById('after-1-pct').textContent = '—';
+}
+</script>
+
+</body>
+</html>

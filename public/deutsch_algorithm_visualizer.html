@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deutsch's Algorithm Visualizer - Quantum Studio</title>
+</head>
+<body>
+
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f8f9fa;
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b7280;
+    --color-text-tertiary: #9ca3af;
+    --color-border-primary: #d1d5db;
+    --color-border-secondary: #e5e7eb;
+    --color-border-tertiary: #f3f4f6;
+    --border-radius-md: 6px;
+    --border-radius-lg: 8px;
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    font-family: var(--font-sans);
+    background: #fafbfc;
+    margin: 0;
+    padding: 20px;
+    color: var(--color-text-primary);
+  }
+  
+  .visualizer { 
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 0;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    font-size: 32px;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .header p {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+  
+  .oracle-selector {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+  
+  .oracle-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .oracle-btn.active {
+    background: #534AB7;
+    color: white;
+    border-color: #534AB7;
+  }
+  
+  .oracle-btn:hover:not(.active) {
+    background: var(--color-background-secondary);
+    border-color: var(--color-border-primary);
+  }
+  
+  .step-nav { 
+    display: flex; 
+    gap: 8px; 
+    flex-wrap: wrap; 
+    margin-bottom: 1.5rem; 
+    justify-content: center;
+  }
+  
+  .step-btn { 
+    padding: 8px 16px; 
+    font-size: 14px; 
+    border: 1px solid var(--color-border-secondary); 
+    border-radius: var(--border-radius-md); 
+    background: var(--color-background-primary); 
+    color: var(--color-text-secondary); 
+    cursor: pointer; 
+    transition: all 0.2s; 
+    font-weight: 400;
+  }
+  
+  .step-btn.active { 
+    background: #534AB7; 
+    color: white; 
+    border-color: #534AB7; 
+    font-weight: 500; 
+  }
+  
+  .step-btn:hover:not(.active) { 
+    background: var(--color-background-secondary); 
+  }
+  
+  .insight { 
+    background: #F0EDFF; 
+    border-left: 3px solid #534AB7; 
+    border-radius: var(--border-radius-md); 
+    padding: 16px 20px; 
+    margin-bottom: 1.5rem; 
+  }
+  
+  .insight .tag { 
+    font-size: 11px; 
+    font-weight: 600; 
+    color: #534AB7; 
+    margin-bottom: 6px; 
+    text-transform: uppercase; 
+    letter-spacing: 0.06em; 
+  }
+  
+  .insight p { 
+    margin: 0; 
+    font-size: 14px; 
+    color: var(--color-text-primary); 
+    line-height: 1.6; 
+  }
+  
+  .result-box {
+    background: linear-gradient(135deg, #F0EDFF 0%, #E1F5EE 100%);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .result-box h2 {
+    font-size: 48px;
+    font-family: var(--font-mono);
+    margin: 0 0 10px;
+    color: #534AB7;
+  }
+  
+  .result-box .verdict {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 10px 0;
+  }
+  
+  .result-box .verdict.constant {
+    color: #10b981;
+  }
+  
+  .result-box .verdict.balanced {
+    color: #f59e0b;
+  }
+  
+  .result-box p {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin: 5px 0 0;
+  }
+  
+  .panel { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 16px; 
+    margin-bottom: 1.5rem; 
+  }
+  
+  @media (max-width: 768px) {
+    .panel { grid-template-columns: 1fr; }
+  }
+  
+  .card { 
+    background: var(--color-background-primary); 
+    border: 1px solid var(--color-border-secondary); 
+    border-radius: var(--border-radius-lg); 
+    padding: 1.25rem 1.5rem; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .card-title { 
+    font-size: 12px; 
+    color: var(--color-text-secondary); 
+    margin: 0 0 16px; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+  }
+  
+  .state-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 10px; 
+  }
+  
+  .state-label { 
+    font-size: 14px; 
+    color: var(--color-text-primary); 
+    min-width: 40px; 
+    font-family: var(--font-mono); 
+    font-weight: 500;
+  }
+  
+  .bar-wrap { 
+    flex: 1; 
+    height: 24px; 
+    background: var(--color-background-secondary); 
+    border-radius: 4px; 
+    overflow: hidden; 
+    border: 1px solid var(--color-border-tertiary);
+  }
+  
+  .bar { 
+    height: 100%; 
+    border-radius: 3px; 
+    transition: width 0.5s ease; 
+    background: linear-gradient(90deg, #534AB7 0%, #6B63C5 100%); 
+  }
+  
+  .bar.negative { 
+    background: linear-gradient(90deg, #D85A30 0%, #E67350 100%); 
+  }
+  
+  .prob-val { 
+    font-size: 13px; 
+    color: var(--color-text-secondary); 
+    min-width: 42px; 
+    text-align: right; 
+    font-family: var(--font-mono); 
+    font-weight: 500;
+  }
+  
+  .nav-btns { 
+    display: flex; 
+    gap: 10px; 
+    margin-top: 1.5rem; 
+    justify-content: center;
+  }
+  
+  .nav-btn { 
+    padding: 10px 24px; 
+    border: 1px solid var(--color-border-secondary); 
+    border-radius: var(--border-radius-md); 
+    background: var(--color-background-primary); 
+    color: var(--color-text-primary); 
+    cursor: pointer; 
+    font-size: 14px; 
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .nav-btn:hover:not(:disabled) { 
+    background: var(--color-background-secondary); 
+  }
+  
+  .nav-btn:disabled { 
+    opacity: 0.4; 
+    cursor: not-allowed; 
+  }
+  
+  .oracle-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+  
+  .oracle-table th,
+  .oracle-table td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid var(--color-border-tertiary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  
+  .oracle-table th {
+    background: var(--color-background-secondary);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+</style>
+
+<div class="visualizer">
+  <div class="header">
+    <h1>🔍 Deutsch's Algorithm Visualizer</h1>
+    <p>Determining if a function is constant or balanced in ONE query</p>
+  </div>
+
+  <div class="oracle-selector">
+    <button class="oracle-btn active" onclick="selectOracle(true)">Constant Function</button>
+    <button class="oracle-btn" onclick="selectOracle(false)">Balanced Function</button>
+  </div>
+
+  <div class="step-nav" id="step-nav"></div>
+
+  <div class="insight" id="insight">
+    <div class="tag" id="insight-tag">Step 0</div>
+    <p id="insight-text">Loading...</p>
+  </div>
+
+  <div class="result-box" id="result-box">
+    <h2 id="result-state">|00⟩</h2>
+    <div class="verdict" id="verdict"></div>
+    <p id="result-desc">Classical: Need 2 queries. Quantum: Need 1!</p>
+  </div>
+
+  <div class="panel">
+    <div class="card">
+      <div class="card-title">System State (4 basis states)</div>
+      <div id="amplitudes"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Oracle Function</div>
+      <p style="font-size: 13px; color: var(--color-text-secondary); margin: 0 0 12px;">
+        How the oracle transforms input x
+      </p>
+      <table class="oracle-table" id="oracle-table">
+        <thead>
+          <tr>
+            <th>Input (x)</th>
+            <th>Output f(x)</th>
+          </tr>
+        </thead>
+        <tbody id="oracle-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Prev</button>
+    <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
+  </div>
+</div>
+
+<script>
+const states = ['|00⟩','|01⟩','|10⟩','|11⟩'];
+
+let isConstant = true;
+let current = 0;
+
+const constantSteps = [
+  {
+    name: 'Init',
+    tag: 'Step 1 — Initialize',
+    text: 'Start with |00⟩. We prepare q[1] to |1⟩ using an X gate. This ancilla qubit enables phase kickback.',
+    amps: [0, 1, 0, 0],
+    result: '|01⟩',
+    verdict: '',
+    desc: 'Ancilla prepared to |1⟩'
+  },
+  {
+    name: 'Hadamards',
+    tag: 'Step 2 — Apply Hadamard gates',
+    text: 'Apply H to both qubits. q[0] enters superposition: (|0⟩+|1⟩)/√2. q[1] enters (|0⟩-|1⟩)/√2. System explores both x=0 and x=1 simultaneously.',
+    amps: [0.5, -0.5, 0.5, -0.5],
+    result: 'Superposition',
+    verdict: '',
+    desc: 'Both inputs tested in parallel'
+  },
+  {
+    name: 'Oracle',
+    tag: 'Step 3 — Oracle (Constant)',
+    text: 'The constant oracle does NOTHING. f(0)=f(1)=0, so no phase change occurs. The state remains unchanged.',
+    amps: [0.5, -0.5, 0.5, -0.5],
+    result: 'No Change',
+    verdict: '',
+    desc: 'Constant function: no effect'
+  },
+  {
+    name: 'Final H',
+    tag: 'Step 4 — Final Hadamard',
+    text: 'Apply H to q[0]. The interference pattern reveals the function type. For constant, q[0] returns to |0⟩.',
+    amps: [1, 0, 0, 0],
+    result: '|00⟩',
+    verdict: 'CONSTANT',
+    desc: 'q[0] = |0⟩ → Function is CONSTANT'
+  }
+];
+
+const balancedSteps = [
+  {
+    name: 'Init',
+    tag: 'Step 1 — Initialize',
+    text: 'Start with |00⟩. We prepare q[1] to |1⟩ using an X gate. This ancilla qubit enables phase kickback.',
+    amps: [0, 1, 0, 0],
+    result: '|01⟩',
+    verdict: '',
+    desc: 'Ancilla prepared to |1⟩'
+  },
+  {
+    name: 'Hadamards',
+    tag: 'Step 2 — Apply Hadamard gates',
+    text: 'Apply H to both qubits. q[0] enters superposition: (|0⟩+|1⟩)/√2. q[1] enters (|0⟩-|1⟩)/√2. System explores both x=0 and x=1 simultaneously.',
+    amps: [0.5, -0.5, 0.5, -0.5],
+    result: 'Superposition',
+    verdict: '',
+    desc: 'Both inputs tested in parallel'
+  },
+  {
+    name: 'Oracle',
+    tag: 'Step 3 — Oracle (Balanced)',
+    text: 'The balanced oracle applies CNOT. When q[0]=|1⟩, it flips q[1], introducing a phase flip. This encodes that f(0)≠f(1).',
+    amps: [0.5, -0.5, -0.5, 0.5],
+    result: 'Phase Flip',
+    verdict: '',
+    desc: 'Balanced function: phase encoded'
+  },
+  {
+    name: 'Final H',
+    tag: 'Step 4 — Final Hadamard',
+    text: 'Apply H to q[0]. The interference pattern reveals the function type. For balanced, q[0] becomes |1⟩.',
+    amps: [0, 0, 1, 0],
+    result: '|10⟩',
+    verdict: 'BALANCED',
+    desc: 'q[0] = |1⟩ → Function is BALANCED'
+  }
+];
+
+let steps = constantSteps;
+
+function selectOracle(constant) {
+  isConstant = constant;
+  steps = constant ? constantSteps : balancedSteps;
+  current = 0;
+  
+  document.querySelectorAll('.oracle-btn').forEach((btn, i) => {
+    btn.className = 'oracle-btn' + ((i === 0) === constant ? ' active' : '');
+  });
+  
+  updateOracleTable();
+  buildNav();
+  render();
+}
+
+function updateOracleTable() {
+  const body = document.getElementById('oracle-body');
+  if (isConstant) {
+    body.innerHTML = `
+      <tr><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>0</td></tr>
+    `;
+  } else {
+    body.innerHTML = `
+      <tr><td>0</td><td>0</td></tr>
+      <tr><td>1</td><td>1</td></tr>
+    `;
+  }
+}
+
+function buildNav() {
+  const nav = document.getElementById('step-nav');
+  nav.innerHTML = '';
+  steps.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'step-btn' + (i === current ? ' active' : '');
+    b.textContent = s.name;
+    b.onclick = () => goTo(i);
+    nav.appendChild(b);
+  });
+}
+
+function render() {
+  const s = steps[current];
+  document.getElementById('insight-tag').textContent = s.tag;
+  document.getElementById('insight-text').textContent = s.text;
+  document.getElementById('result-state').textContent = s.result;
+  document.getElementById('result-desc').textContent = s.desc;
+  
+  const verdictEl = document.getElementById('verdict');
+  verdictEl.textContent = s.verdict;
+  verdictEl.className = 'verdict' + (s.verdict ? (s.verdict === 'CONSTANT' ? ' constant' : ' balanced') : '');
+
+  document.querySelectorAll('.step-btn').forEach((b, i) => {
+    b.className = 'step-btn' + (i === current ? ' active' : '');
+  });
+
+  const maxAmp = Math.max(...s.amps.map(Math.abs), 0.01);
+  const ampDiv = document.getElementById('amplitudes');
+  ampDiv.innerHTML = '';
+  s.amps.forEach((a, i) => {
+    const pct = Math.abs(a) / maxAmp * 100;
+    const prob = Math.round(a * a * 100);
+    ampDiv.innerHTML += `
+      <div class="state-row">
+        <span class="state-label">${states[i]}</span>
+        <div class="bar-wrap"><div class="bar ${a < 0 ? 'negative' : ''}" style="width:${pct}%"></div></div>
+        <span class="prob-val">${a.toFixed(2)}</span>
+      </div>`;
+  });
+
+  document.getElementById('prev-btn').disabled = current === 0;
+  document.getElementById('next-btn').disabled = current === steps.length - 1;
+}
+
+function goTo(i) { current = i; render(); }
+function navigate(dir) { current = Math.max(0, Math.min(steps.length - 1, current + dir)); render(); }
+
+updateOracleTable();
+buildNav();
+render();
+</script>
+
+</body>
+</html>

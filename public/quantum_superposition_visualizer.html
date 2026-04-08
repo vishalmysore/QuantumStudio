@@ -1,0 +1,581 @@
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f0f3f6;
+    --color-text-primary: #1e293b;
+    --color-text-secondary: #475569;
+    --color-text-tertiary: #94a3b8;
+    --color-border-primary: #3b82f6;
+    --color-border-secondary: #cbd5e1;
+    --color-border-tertiary: #e2e8f0;
+    --border-radius-md: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #0f172a;
+      --color-background-secondary: #1e293b;
+      --color-text-primary: #f8fafc;
+      --color-text-secondary: #cbd5e1;
+      --color-text-tertiary: #64748b;
+      --color-border-primary: #3b82f6;
+      --color-border-secondary: #334155;
+      --color-border-tertiary: #1e293b;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
+  }
+
+  .container {
+    padding: 1rem 0;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+  }
+
+  .tab {
+    padding: 6px 16px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 13px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-secondary);
+    transition: all .15s;
+  }
+
+  .tab.active {
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-primary);
+  }
+
+  .panel {
+    display: none;
+  }
+
+  .panel.active {
+    display: block;
+  }
+
+  .section-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .state-label {
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 36px;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    background: var(--color-background-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    border: 0.5px solid var(--color-border-tertiary);
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .5s ease;
+  }
+
+  .bar-pos {
+    background: #3B8BD4;
+  }
+
+  .bar-neg {
+    background: #D85A30;
+  }
+
+  .bar-zero {
+    background: var(--color-border-tertiary);
+  }
+
+  .bar-val {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    min-width: 44px;
+    text-align: right;
+    font-family: var(--font-mono);
+  }
+
+  .prob-val {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    min-width: 44px;
+    text-align: right;
+    font-family: var(--font-mono);
+  }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .ctrl-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .ctrl-group label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  select {
+    font-size: 13px;
+    padding: 4px 8px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+
+  .measure-btn {
+    padding: 6px 20px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 13px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-primary);
+    transition: all .15s;
+    margin-bottom: 1rem;
+  }
+
+  .measure-btn:hover {
+    background: var(--color-background-secondary);
+  }
+
+  .result-box {
+    padding: 10px 16px;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 14px;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .result-box.show {
+    display: block;
+  }
+
+  .result-state {
+    font-size: 22px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    color: var(--color-text-primary);
+  }
+
+  .result-prob {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 0.5px solid var(--color-border-tertiary);
+    margin: 1.25rem 0;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+
+  .wave-canvas {
+    width: 100%;
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    display: block;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 6px;
+  }
+
+  .gate-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .gate-btn {
+    padding: 5px 12px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+    transition: all .15s;
+  }
+
+  .gate-btn:hover {
+    background: var(--color-background-secondary);
+  }
+
+  .qubit-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    min-width: 54px;
+  }
+
+  .reset-btn {
+    padding: 5px 12px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-secondary);
+    transition: all .15s;
+    margin-left: auto;
+  }
+
+  .reset-btn:hover {
+    background: var(--color-background-secondary);
+  }
+</style>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('amplitudes')">Amplitudes</button>
+    <button class="tab" onclick="switchTab('wave')">Wave view</button>
+    <button class="tab" onclick="switchTab('gates')">Apply gates</button>
+  </div>
+
+  <!-- PANEL 1: Amplitudes -->
+  <div class="panel active" id="panel-amplitudes">
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>Preset state</label>
+        <select onchange="loadPreset(this.value)">
+          <option value="equal">Equal superposition (H on all)</option>
+          <option value="basis0">Classical: |000⟩</option>
+          <option value="basis7">Classical: |111⟩</option>
+          <option value="interference">After interference</option>
+          <option value="entangled">Entangled pair</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#3B8BD4"></div>positive amplitude
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background:#D85A30"></div>negative amplitude
+      </div>
+    </div>
+
+    <div class="section-label">Amplitude &amp; probability for each of the 8 states</div>
+    <div
+      style="display: flex; gap: 8px; margin-bottom: 6px; font-size: 11px; color: var(--color-text-tertiary); font-family: var(--font-mono); font-weight: 600;">
+      <span style="min-width: 36px; padding-left: 2px;">|Q₀₁₂⟩</span>
+      <span style="flex: 1;"></span>
+      <span style="min-width: 44px; text-align: right;">Amp</span>
+      <span style="min-width: 44px; text-align: right;">Prob %</span>
+    </div>
+    <div id="bars-container"></div>
+
+    <hr class="divider">
+    <button class="measure-btn" onclick="measureState()">Measure (collapse wavefunction)</button>
+    <div class="result-box" id="result-box">
+      <div class="result-state" id="result-state"></div>
+      <div class="result-prob" id="result-prob"></div>
+    </div>
+    <p class="hint">Notice: all amplitudes squared always sum to 1 (total probability = 100%)</p>
+  </div>
+
+  <!-- PANEL 2: Wave -->
+  <div class="panel" id="panel-wave">
+    <p class="section-label" style="margin-bottom:12px">Each state's amplitude visualized as a wave — positive and
+      negative values can cancel (destructive interference) or reinforce (constructive interference)</p>
+    <canvas class="wave-canvas" id="wave-canvas" height="200"></canvas>
+    <p class="hint" style="margin-top:8px">Bars above zero-line = positive amplitude · Bars below = negative amplitude ·
+      Taller bars = more likely outcome</p>
+  </div>
+
+  <!-- PANEL 3: Gates -->
+  <div class="panel" id="panel-gates">
+    <p class="section-label" style="margin-bottom:12px">Apply quantum gates to individual qubits. Watch how amplitudes
+      redistribute — this is wave engineering.</p>
+    <div id="gate-controls"></div>
+    <hr class="divider">
+    <div class="section-label">Resulting state</div>
+    <div
+      style="display: flex; gap: 8px; margin-bottom: 6px; font-size: 11px; color: var(--color-text-tertiary); font-family: var(--font-mono); font-weight: 600;">
+      <span style="min-width: 36px; padding-left: 2px;">|Q₀₁₂⟩</span>
+      <span style="flex: 1;"></span>
+      <span style="min-width: 44px; text-align: right;">Amp</span>
+      <span style="min-width: 44px; text-align: right;">Prob %</span>
+    </div>
+    <div id="gate-bars"></div>
+  </div>
+</div>
+
+<script>
+  const STATES = ['000', '001', '010', '011', '100', '101', '110', '111'];
+
+  let amplitudes = new Array(8).fill(0);
+
+  const PRESETS = {
+    equal: () => { const v = 1 / Math.sqrt(8); return new Array(8).fill(v); },
+    basis0: () => { const a = new Array(8).fill(0); a[0] = 1; return a; },
+    basis7: () => { const a = new Array(8).fill(0); a[7] = 1; return a; },
+    interference: () => {
+      const a = new Array(8).fill(0);
+      a[6] = Math.sqrt(0.6);
+      a[2] = Math.sqrt(0.2);
+      a[4] = -Math.sqrt(0.15);
+      a[0] = Math.sqrt(0.05);
+      return a;
+    },
+    entangled: () => {
+      const a = new Array(8).fill(0);
+      a[0] = 1 / Math.sqrt(2);
+      a[7] = 1 / Math.sqrt(2);
+      return a;
+    }
+  };
+
+  function loadPreset(key) {
+    amplitudes = PRESETS[key]();
+    renderAll();
+    document.getElementById('result-box').classList.remove('show');
+  }
+
+  function renderAll() {
+    renderBars('bars-container');
+    renderBars('gate-bars');
+    renderWave();
+  }
+
+  function renderBars(containerId) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    const maxAmp = Math.max(...amplitudes.map(Math.abs), 0.01);
+    c.innerHTML = '';
+    amplitudes.forEach((amp, i) => {
+      const prob = amp * amp;
+      const pct = Math.abs(amp) / maxAmp * 100;
+      const isPos = amp >= 0;
+      const isZero = Math.abs(amp) < 0.001;
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      const fillClass = isZero ? 'bar-zero' : (isPos ? 'bar-pos' : 'bar-neg');
+      row.innerHTML = `
+      <span class="state-label">|${STATES[i]}⟩</span>
+      <div class="bar-track">
+        <div class="bar-fill ${fillClass}" style="width:${pct.toFixed(1)}%"></div>
+      </div>
+      <span class="bar-val">${amp >= 0 ? '+' : ''}${amp.toFixed(3)}</span>
+      <span class="prob-val">${(prob * 100).toFixed(1)}%</span>
+    `;
+      c.appendChild(row);
+    });
+  }
+
+  function renderWave() {
+    const canvas = document.getElementById('wave-canvas');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.parentElement.clientWidth;
+    const H = 200;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    ctx.clearRect(0, 0, W, H);
+
+    const pad = 24;
+    const barW = (W - pad * 2) / 8;
+    const midY = H / 2;
+    const maxH = H / 2 - 20;
+    const maxAmp = Math.max(...amplitudes.map(Math.abs), 0.01);
+
+    // zero line
+    ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad, midY); ctx.lineTo(W - pad, midY); ctx.stroke();
+    ctx.setLineDash([]);
+
+    amplitudes.forEach((amp, i) => {
+      const x = pad + i * barW;
+      const bH = (Math.abs(amp) / maxAmp) * maxH;
+      const isPos = amp >= 0;
+      ctx.fillStyle = isPos ? '#3B8BD4' : '#D85A30';
+      ctx.globalAlpha = 0.85;
+      if (isPos) {
+        ctx.fillRect(x + 4, midY - bH, barW - 8, bH);
+      } else {
+        ctx.fillRect(x + 4, midY, barW - 8, bH);
+      }
+      ctx.globalAlpha = 1;
+
+      // state label
+      ctx.fillStyle = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(STATES[i], x + barW / 2, H - 6);
+    });
+  }
+
+  function measureState() {
+    const probs = amplitudes.map(a => a * a);
+    const r = Math.random();
+    let cumul = 0;
+    let chosen = 7;
+    for (let i = 0; i < 8; i++) {
+      cumul += probs[i];
+      if (r < cumul) { chosen = i; break; }
+    }
+    const box = document.getElementById('result-box');
+    document.getElementById('result-state').textContent = '|' + STATES[chosen] + '⟩';
+    document.getElementById('result-prob').textContent =
+      'This outcome had ' + (probs[chosen] * 100).toFixed(1) + '% probability. Wavefunction collapsed to one result.';
+    box.classList.add('show');
+  }
+
+  // Gates panel
+  function buildGateControls() {
+    const c = document.getElementById('gate-controls');
+    c.innerHTML = '';
+    const desc = { H: 'Hadamard (creates superposition)', X: 'X gate (flips qubit)', Z: 'Z gate (flips phase of |1⟩)' };
+    ['Qubit 0', 'Qubit 1', 'Qubit 2'].forEach((qName, qi) => {
+      const row = document.createElement('div');
+      row.className = 'gate-row';
+      row.innerHTML = `<span class="qubit-label">${qName}</span>`;
+      ['H', 'X', 'Z'].forEach(gate => {
+        const btn = document.createElement('button');
+        btn.className = 'gate-btn';
+        btn.title = desc[gate];
+        btn.textContent = gate;
+        btn.onclick = () => applyGate(gate, qi);
+        row.appendChild(btn);
+      });
+      if (qi === 0) {
+        const rb = document.createElement('button');
+        rb.className = 'reset-btn';
+        rb.textContent = 'Reset';
+        rb.onclick = () => { loadPreset('basis0'); };
+        row.appendChild(rb);
+      }
+      c.appendChild(row);
+    });
+  }
+
+  function applyGate(gate, qubit) {
+    const newAmp = [...amplitudes];
+    const mask = 1 << (2 - qubit);
+
+    if (gate === 'H') {
+      const next = new Array(8).fill(0);
+      for (let i = 0; i < 8; i++) {
+        if (Math.abs(amplitudes[i]) < 1e-10 && Math.sign(amplitudes[i]) >= 0) continue;
+        const bit = (i & mask) ? 1 : 0;
+        const j0 = i & ~mask;
+        const j1 = i | mask;
+        const s = 1 / Math.sqrt(2);
+        if (bit === 0) {
+          next[j0] += s * amplitudes[i];
+          next[j1] += s * amplitudes[i];
+        } else {
+          next[j0] += s * amplitudes[i];
+          next[j1] -= s * amplitudes[i];
+        }
+      }
+      amplitudes = next;
+    } else if (gate === 'X') {
+      const next = new Array(8).fill(0);
+      for (let i = 0; i < 8; i++) {
+        const j = i ^ mask;
+        next[j] = amplitudes[i];
+      }
+      amplitudes = next;
+    } else if (gate === 'Z') {
+      for (let i = 0; i < 8; i++) {
+        if (i & mask) amplitudes[i] = -amplitudes[i];
+      }
+    }
+
+    renderAll();
+    document.getElementById('result-box').classList.remove('show');
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById('panel-' + name).classList.add('active');
+    if (name === 'wave') renderWave();
+  }
+
+  // Init
+  loadPreset('equal');
+  buildGateControls();
+  window.addEventListener('resize', () => { if (document.getElementById('panel-wave').classList.contains('active')) renderWave(); });
+</script>

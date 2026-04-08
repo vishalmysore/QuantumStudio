@@ -60,7 +60,9 @@ export default function SetupScreen({ onSave }) {
         { name: "GHZ State (Cat States)", file: "ghz_state_visualizer.html", desc: "Maximum multi-qubit entanglement." },
         { name: "Measurement Collapse", file: "measurement_collapse_visualizer.html", desc: "See probabilities become reality." },
         { name: "Gate Transformer", file: "gate_transformer_visualizer.html", desc: "How gates change the Bloch vector." },
-        { name: "Multi-Qubit Explorer", file: "multi_qubit_explorer.html", desc: "Visualizing higher-order Hilbert space." }
+        { name: "Multi-Qubit Explorer", file: "multi_qubit_explorer.html", desc: "Visualizing higher-order Hilbert space." },
+        { name: "Full Algorithm Lifecycle", file: "quantum_full_lifecycle.html", desc: "Step-by-step 3-qubit algorithm walkthrough." },
+        { name: "Amplitude & Waves Sandbox", file: "quantum_superposition_visualizer.html", desc: "Interactive wave interference playground." }
     ];
 
     return (

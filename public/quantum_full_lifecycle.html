@@ -1,0 +1,515 @@
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f0f3f6;
+    --color-background-info: #e0f2fe;
+    --color-text-primary: #1e293b;
+    --color-text-secondary: #475569;
+    --color-text-tertiary: #94a3b8;
+    --color-text-info: #0284c7;
+    --color-border-primary: #3b82f6;
+    --color-border-secondary: #cbd5e1;
+    --color-border-tertiary: #e2e8f0;
+    --color-border-info: #7dd3fc;
+    --color-border-success: #86efac;
+    --color-border-warning: #fca5a5;
+    --border-radius-md: 6px;
+    --border-radius-lg: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #0f172a;
+      --color-background-secondary: #1e293b;
+      --color-background-info: #164e63;
+      --color-text-primary: #f8fafc;
+      --color-text-secondary: #cbd5e1;
+      --color-text-tertiary: #64748b;
+      --color-text-info: #38bdf8;
+      --color-border-primary: #3b82f6;
+      --color-border-secondary: #334155;
+      --color-border-tertiary: #1e293b;
+      --color-border-info: #0ea5e9;
+      --color-border-success: #22c55e;
+      --color-border-warning: #ef4444;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+  }
+
+  body {
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
+  }
+
+  .wrap {
+    padding: 1rem 0;
+    font-family: var(--font-sans)
+  }
+
+  .stage-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden
+  }
+
+  .snav-btn {
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 12px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-right: 0.5px solid var(--color-border-secondary);
+    transition: all .15s
+  }
+
+  .snav-btn:last-child {
+    border-right: none
+  }
+
+  .snav-btn.active {
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    font-weight: 500
+  }
+
+  .stage {
+    display: none
+  }
+
+  .stage.active {
+    display: block
+  }
+
+  .stage-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 4px
+  }
+
+  .stage-desc {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5
+  }
+
+  .bars {
+    display: flex;
+    flex-direction: column;
+    gap: 5px
+  }
+
+  .bar-header {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px
+  }
+
+  .slbl {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    min-width: 40px;
+    color: var(--color-text-primary)
+  }
+
+  .track {
+    flex: 1;
+    height: 18px;
+    background: var(--color-background-secondary);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 0.5px solid var(--color-border-tertiary);
+    position: relative
+  }
+
+  .fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .6s ease
+  }
+
+  .fill-pos {
+    background: #378ADD
+  }
+
+  .fill-neg {
+    background: #D85A30
+  }
+
+  .fill-zero {
+    background: var(--color-border-tertiary)
+  }
+
+  .fill-hi {
+    background: #1D9E75
+  }
+
+  .pct {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    min-width: 36px;
+    text-align: right;
+    font-family: var(--font-mono)
+  }
+
+  .amp {
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    min-width: 48px;
+    text-align: right;
+    font-family: var(--font-mono)
+  }
+
+  .legend {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap
+  }
+
+  .leg {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--color-text-secondary)
+  }
+
+  .legdot {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px
+  }
+
+  .gate-section {
+    margin-bottom: 16px
+  }
+
+  .gate-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px
+  }
+
+  .qlbl {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    min-width: 52px
+  }
+
+  .gbtn {
+    padding: 4px 10px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-primary);
+    transition: all .15s
+  }
+
+  .gbtn:hover {
+    background: var(--color-background-secondary)
+  }
+
+  .gbtn.applied {
+    background: var(--color-background-info);
+    border-color: var(--color-border-info);
+    color: var(--color-text-info)
+  }
+
+  .reset-link {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px
+  }
+
+  .measure-btn {
+    padding: 7px 20px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 13px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-primary);
+    transition: all .15s;
+    margin-bottom: 12px
+  }
+
+  .measure-btn:hover {
+    background: var(--color-background-secondary)
+  }
+
+  .result {
+    padding: 12px 16px;
+    background: var(--color-background-secondary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    display: none
+  }
+
+  .result.show {
+    display: block
+  }
+
+  .res-state {
+    font-size: 26px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    color: var(--color-text-primary)
+  }
+
+  .res-note {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 4px
+  }
+
+  .entangle-info {
+    padding: 10px 14px;
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md);
+    border: 0.5px solid var(--color-border-tertiary);
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-bottom: 14px;
+    line-height: 1.6
+  }
+
+  .nav-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px
+  }
+
+  .nav-btn {
+    padding: 6px 14px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--color-text-secondary);
+    transition: all .15s
+  }
+
+  .nav-btn:hover {
+    background: var(--color-background-secondary)
+  }
+
+  .highlight-row .fill-hi {
+    animation: pulse-bar .8s ease-in-out 2
+  }
+
+  @keyframes pulse-bar {
+
+    0%,
+    100% {
+      opacity: 1
+    }
+
+    50% {
+      opacity: 0.5
+    }
+  }
+</style>
+
+<div class="wrap">
+  <div class="stage-nav">
+    <button class="snav-btn active" onclick="goStage(0)">1. Start</button>
+    <button class="snav-btn" onclick="goStage(1)">2. Gates</button>
+    <button class="snav-btn" onclick="goStage(2)">3. Entangle</button>
+    <button class="snav-btn" onclick="goStage(3)">4. Interfere</button>
+    <button class="snav-btn" onclick="goStage(4)">5. Measure</button>
+  </div>
+
+  <!-- STAGE 0: Start -->
+  <div class="stage active" id="s0">
+    <div class="stage-title">Classical start: |000⟩</div>
+    <div class="stage-desc">All probability sits on one state. This is just a classical bit — deterministic, boring. No
+      quantum advantage yet.</div>
+    <div class="legend">
+      <div class="leg">
+        <div class="legdot" style="background:#378ADD"></div>positive amplitude
+      </div>
+      <div class="leg">
+        <div class="legdot" style="background:#D85A30"></div>negative amplitude
+      </div>
+      <div class="leg">
+        <div class="legdot" style="background:#1D9E75"></div>target answer
+      </div>
+    </div>
+    <div class="bars" id="bars-s0"></div>
+    <div class="nav-btns"><button class="nav-btn" onclick="goStage(1)">Next: apply gates →</button></div>
+  </div>
+
+  <!-- STAGE 1: Gates -->
+  <div class="stage" id="s1">
+    <div class="stage-title">Gates spread the amplitude</div>
+    <div class="stage-desc">Each Hadamard gate splits one qubit's amplitude equally across |0⟩ and |1⟩. Apply H to all 3
+      qubits and the probability spreads equally across all 8 states — the wavefunction now "encodes" all of them.</div>
+    <div class="gate-section">
+      <div class="gate-row"><span class="qlbl">Qubit 0</span><button class="gbtn" id="g0" onclick="applyH(0)">H</button>
+      </div>
+      <div class="gate-row"><span class="qlbl">Qubit 1</span><button class="gbtn" id="g1" onclick="applyH(1)">H</button>
+      </div>
+      <div class="gate-row"><span class="qlbl">Qubit 2</span><button class="gbtn" id="g2" onclick="applyH(2)">H</button>
+      </div>
+      <span class="reset-link" onclick="resetGates()">Reset</span>
+    </div>
+    <div class="bars" id="bars-s1"></div>
+    <div class="nav-btns"><button class="nav-btn" onclick="goStage(2)">Next: entanglement →</button></div>
+  </div>
+
+  <!-- STAGE 2: Entangle -->
+  <div class="stage" id="s2">
+    <div class="stage-title">Entanglement links qubits</div>
+    <div class="stage-desc">A CNOT gate entangles two qubits — measuring one instantly determines the other, no matter
+      how far apart. The system can no longer be described as independent qubits. It becomes one inseparable joint
+      state.</div>
+    <div class="entangle-info">
+      After entanglement, |Ψ⟩ cannot be written as qubit A ⊗ qubit B ⊗ qubit C.<br>
+      Only |000⟩ and |111⟩ survive — perfectly correlated pairs.
+    </div>
+    <div class="bars" id="bars-s2"></div>
+    <div class="nav-btns"><button class="nav-btn" onclick="goStage(3)">Next: interference →</button></div>
+  </div>
+
+  <!-- STAGE 3: Interference -->
+  <div class="stage" id="s3">
+    <div class="stage-title">Interference sculpts the probabilities</div>
+    <div class="stage-desc">This is the engine of <strong>Grover's Algorithm</strong>. A mathematical
+      <strong>Oracle</strong> secretly flagged our target `|110⟩` by turning its amplitude negative. A diffusion
+      operator then uses that negative amplitude as a mirror—causing wrong answers to cancel out (destructive
+      interference) while forcing `|110⟩` to rise and dominate (constructive interference).</div>
+    <div class="bars" id="bars-s3"></div>
+    <div class="nav-btns"><button class="nav-btn" onclick="goStage(4)">Next: measure →</button></div>
+  </div>
+
+  <!-- STAGE 4: Measure -->
+  <div class="stage" id="s4">
+    <div class="stage-title">Measurement collapses everything</div>
+    <div class="stage-desc">The wavefunction collapses to one outcome. Because we engineered the amplitudes, the right
+      answer is overwhelmingly likely. You get one result — but almost certainly the correct one.</div>
+    <div class="bars" id="bars-s4" style="margin-bottom:14px"></div>
+    <button class="measure-btn" onclick="doMeasure()">Collapse the wavefunction</button>
+    <div class="result" id="result">
+      <div class="res-state" id="res-state"></div>
+      <div class="res-note" id="res-note"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STATES = ['000', '001', '010', '011', '100', '101', '110', '111'];
+  const TARGET = 6;
+
+  const STAGE_AMPS = [
+    [1, 0, 0, 0, 0, 0, 0, 0],
+    null,
+    [1 / Math.sqrt(2), 0, 0, 0, 0, 0, 0, 1 / Math.sqrt(2)],
+    [0.07, 0.07, -0.1, -0.1, -0.1, -0.1, 0.94, 0.07],
+    [0.02, 0.02, 0.04, 0.03, 0.03, 0.04, 0.96, 0.02]
+  ];
+
+  let gateAmps = [1, 0, 0, 0, 0, 0, 0, 0];
+  let gatesApplied = [false, false, false];
+
+  function renderBars(containerId, amps, highlightIdx) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    const maxA = Math.max(...amps.map(Math.abs), 0.01);
+    c.innerHTML = '<div class="bar-header"><span style="min-width:40px">|Q₀₁₂⟩</span><span style="flex:1"></span><span style="min-width:48px;text-align:right">Amp</span><span style="min-width:36px;text-align:right">Prob</span></div>';
+    amps.forEach((a, i) => {
+      const prob = a * a;
+      const pct = Math.abs(a) / maxA * 100;
+      const isHi = i === highlightIdx;
+      const fillCls = isHi ? 'fill-hi' : (a > 0.001 ? 'fill-pos' : (a < -0.001 ? 'fill-neg' : 'fill-zero'));
+      const row = document.createElement('div');
+      row.className = 'bar-row' + (isHi ? ' highlight-row' : '');
+      row.innerHTML = `<span class="slbl">|${STATES[i]}⟩</span><div class="track"><div class="fill ${fillCls}" style="width:${pct.toFixed(1)}%"></div></div><span class="amp">${a >= 0 ? '+' : ''}${a.toFixed(2)}</span><span class="pct">${(prob * 100).toFixed(1)}%</span>`;
+      c.appendChild(row);
+    });
+  }
+
+  function applyH(q) {
+    const mask = 1 << (2 - q);
+    const next = new Array(8).fill(0);
+    const s = 1 / Math.sqrt(2);
+    for (let i = 0; i < 8; i++) {
+      if (Math.abs(gateAmps[i]) < 1e-10) continue;
+      const bit = (i & mask) ? 1 : 0;
+      const j0 = i & ~mask;
+      const j1 = i | mask;
+      if (bit === 0) { next[j0] += s * gateAmps[i]; next[j1] += s * gateAmps[i]; }
+      else { next[j0] += s * gateAmps[i]; next[j1] -= s * gateAmps[i]; }
+    }
+    gateAmps = next;
+    gatesApplied[q] = true;
+    document.getElementById('g' + q).classList.add('applied');
+    renderBars('bars-s1', gateAmps, -1);
+  }
+
+  function resetGates() {
+    gateAmps = [1, 0, 0, 0, 0, 0, 0, 0];
+    gatesApplied = [false, false, false];
+    [0, 1, 2].forEach(i => document.getElementById('g' + i).classList.remove('applied'));
+    renderBars('bars-s1', gateAmps, -1);
+  }
+
+  function doMeasure() {
+    const amps = STAGE_AMPS[4];
+    const probs = amps.map(a => a * a);
+    const r = Math.random();
+    let cum = 0, chosen = 7;
+    for (let i = 0; i < 8; i++) { cum += probs[i]; if (r < cum) { chosen = i; break; } }
+    const box = document.getElementById('result');
+    document.getElementById('res-state').textContent = '|' + STATES[chosen] + '⟩';
+    const isRight = chosen === TARGET;
+    document.getElementById('res-note').textContent =
+      isRight
+        ? 'Correct answer. The amplitude engineering worked — constructive interference made this outcome dominate.'
+        : 'Occasionally a wrong answer comes out (' + (probs[chosen] * 100).toFixed(1) + '% chance). Real algorithms run many times to confirm.';
+    box.style.borderColor = isRight ? 'var(--color-border-success)' : 'var(--color-border-warning)';
+    box.classList.add('show');
+  }
+
+  function goStage(n) {
+    document.querySelectorAll('.stage').forEach((s, i) => s.classList.toggle('active', i === n));
+    document.querySelectorAll('.snav-btn').forEach((b, i) => b.classList.toggle('active', i === n));
+    if (n === 4) { document.getElementById('result').classList.remove('show'); }
+  }
+
+  renderBars('bars-s0', STAGE_AMPS[0], -1);
+  renderBars('bars-s1', gateAmps, -1);
+  renderBars('bars-s2', STAGE_AMPS[2], -1);
+  renderBars('bars-s3', STAGE_AMPS[3], TARGET);
+  renderBars('bars-s4', STAGE_AMPS[4], TARGET);
+</script>

@@ -96,6 +96,9 @@ export default function SetupScreen({ onSave }) {
                             <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
                                 placeholder="LLM API Key" style={{ ...inputStyle, flex: 2 }} />
                         </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '4px' }}>
+                            To get a free NVIDIA Key, click here: <a href="https://build.nvidia.com/settings/api-keys" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)', textDecoration: 'underline' }}>https://build.nvidia.com/settings/api-keys</a>
+                        </div>
                     </div>
 
                     <div style={{

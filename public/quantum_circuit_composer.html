@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #60a5fa;
+            --gate-h: #8b5cf6;
+            --gate-x: #ef4444;
+            --gate-z: #10b981;
+            --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid var(--bg-tertiary);
+        }
+
+        .toolbox h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .draggable-item {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: grab;
+            font-weight: 500;
+            font-family: var(--font-mono);
+            text-align: center;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+            border-color: var(--text-primary);
+        }
+
+        .draggable-item.item-qubit {
+            border: 1px dashed var(--accent);
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+        }
+
+        .draggable-item.item-gate-h {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--gate-h);
+            color: #c4b5fd;
+        }
+
+        .draggable-item.item-gate-x {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--gate-x);
+            color: #fca5a5;
+        }
+
+        .draggable-item.item-gate-z {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--gate-z);
+            color: #6ee7b7;
+        }
+
+        /* Main Canvas */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .circuit-board {
+            flex: 1;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--bg-tertiary);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .circuit-board.drag-over {
+            border-color: var(--accent);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .wire-row {
+            display: flex;
+            align-items: center;
+            position: relative;
+            height: 50px;
+        }
+
+        .wire-label {
+            width: 60px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-secondary);
+        }
+
+        .wire-line {
+            flex: 1;
+            height: 2px;
+            background: var(--bg-tertiary);
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 10px;
+        }
+
+        .gate-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 14px;
+            position: relative;
+            z-index: 2;
+            transition: all 0.2s;
+        }
+
+        /* Droppable zone for gates */
+        .wire-line.drag-over {
+            background: var(--accent);
+        }
+
+        /* Dashboard */
+        .dashboard {
+            height: 280px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--bg-tertiary);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+
+        .stat-badge {
+            background: var(--bg-tertiary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            display: inline-flex;
+            gap: 8px;
+        }
+
+        .stat-badge span {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .bars-container {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            overflow-x: auto;
+            padding-top: 10px;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 6px;
+            height: 100%;
+            min-width: 32px;
+        }
+
+        .bar-track {
+            width: 100%;
+            max-width: 24px;
+            flex: 1;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bar-fill {
+            width: 100%;
+            border-radius: 4px;
+            transition: height 0.3s ease;
+            position: absolute;
+        }
+
+        .bar-fill.pos {
+            background: #3b82f6;
+            bottom: 50%;
+            transform-origin: bottom;
+        }
+
+        .bar-fill.neg {
+            background: #ef4444;
+            top: 50%;
+            transform-origin: top;
+        }
+
+        .bar-zero-line {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 2;
+        }
+
+        .bar-label {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            transform: rotate(-45deg);
+            margin-top: 10px;
+        }
+
+        .empty-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            pointer-events: none;
+            border-radius: 8px;
+        }
+
+        button.reset-btn {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.reset-btn:hover {
+            background: var(--bg-tertiary);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <div class="toolbox">
+            <h3>Quantum Elements</h3>
+            <div class="draggable-item item-qubit" draggable="true" ondragstart="dragStart(event, 'QUBIT')">
+                + Drag Qubit
+            </div>
+        </div>
+
+        <div class="toolbox" style="margin-top:20px;">
+            <h3>Logic Gates</h3>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <div class="draggable-item item-gate-h" draggable="true" ondragstart="dragStart(event, 'H')">H
+                    (Hadamard)</div>
+                <div class="draggable-item item-gate-x" draggable="true" ondragstart="dragStart(event, 'X')">X (NOT)
+                </div>
+                <div class="draggable-item item-gate-z" draggable="true" ondragstart="dragStart(event, 'Z')">Z (Phase)
+                </div>
+            </div>
+            <div style="margin-top:16px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+                Drag Qubits to the board to expand the universe. Drag Gates onto wires to manipulate probabilities.
+            </div>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <!-- Circuit Board (Drop Zone for Qubits) -->
+        <div class="circuit-board" id="board" ondrop="dropBoard(event)" ondragover="allowDrop(event)"
+            ondragenter="dragEnterBoard(event)" ondragleave="dragLeaveBoard(event)">
+            <div class="empty-state" id="empty-state">Drag Qubits here to build your circuit (Max 6)</div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <div class="dash-header">
+                <div style="display: flex; gap: 12px;">
+                    <div class="stat-badge">Qubits: <span id="stat-qubits">0</span></div>
+                    <div class="stat-badge">Combinations: <span id="stat-combinations">1</span></div>
+                </div>
+                <button class="reset-btn" onclick="resetCircuit()">Clear Circuit</button>
+            </div>
+
+            <div class="bars-container" id="chart">
+                <!-- Bars rendered here -->
+                <div style="color: var(--text-secondary); font-size: 13px; margin: auto;">Add qubits to view probability
+                    spaces.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let numQubits = 0;
+        // Circuit representation: array of wires, each wire is an array of gates
+        let circuit = [];
+        const MAX_QUBITS = 6;
+
+        // --- DND Logic ---
+        let draggedType = null;
+
+        function dragStart(e, type) {
+            draggedType = type;
+            e.dataTransfer.setData("text/plain", type);
+            // Optional transparent drag image
+        }
+
+        function allowDrop(e) { e.preventDefault(); }
+        function dragEnterBoard(e) { if (draggedType === 'QUBIT') document.getElementById('board').classList.add('drag-over'); }
+        function dragLeaveBoard(e) { document.getElementById('board').classList.remove('drag-over'); }
+
+        function dropBoard(e) {
+            e.preventDefault();
+            document.getElementById('board').classList.remove('drag-over');
+            const type = e.dataTransfer.getData("text/plain");
+            if (type === 'QUBIT' && numQubits < MAX_QUBITS) {
+                addQubit();
+            }
+        }
+
+        function allowDropWire(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function dragLeaveWire(e) { e.currentTarget.classList.remove('drag-over'); }
+        function dropWire(e, qubitIndex) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const type = e.dataTransfer.getData("text/plain");
+            if (['H', 'X', 'Z'].includes(type)) {
+                addGate(qubitIndex, type);
+            }
+        }
+
+        // --- Circuit Logic ---
+        function addQubit() {
+            numQubits++;
+            circuit.push([]);
+            document.getElementById('empty-state').style.display = 'none';
+            renderBoard();
+            calculateMath();
+        }
+
+        function addGate(qIndex, type) {
+            circuit[qIndex].push(type);
+            renderBoard();
+            calculateMath();
+        }
+
+        function resetCircuit() {
+            numQubits = 0;
+            circuit = [];
+            document.getElementById('empty-state').style.display = 'flex';
+            renderBoard();
+            calculateMath();
+        }
+
+        // --- Rendering ---
+        function renderBoard() {
+            const board = document.getElementById('board');
+            // keep empty state
+            const empty = document.getElementById('empty-state');
+            board.innerHTML = '';
+            board.appendChild(empty);
+
+            circuit.forEach((wireGates, i) => {
+                const row = document.createElement('div');
+                row.className = 'wire-row';
+
+                const label = document.createElement('div');
+                label.className = 'wire-label';
+                label.innerText = `|q${i}⟩`;
+
+                const wire = document.createElement('div');
+                wire.className = 'wire-line';
+                wire.ondragover = allowDropWire;
+                wire.ondragenter = allowDropWire;
+                wire.ondragleave = dragLeaveWire;
+                wire.ondrop = (e) => dropWire(e, i);
+
+                wireGates.forEach(gate => {
+                    const g = document.createElement('div');
+                    g.className = `gate-slot draggable-item item-gate-${gate.toLowerCase()}`;
+                    g.innerText = gate;
+                    g.style.cursor = 'default';
+                    g.ondragstart = (e) => e.preventDefault(); // disable re-dragging for now
+                    wire.appendChild(g);
+                });
+
+                // placeholder target area
+                const phantom = document.createElement('div');
+                phantom.style.width = '40px'; phantom.style.height = '40px'; phantom.style.border = '1px dashed rgba(255,255,255,0.1)'; phantom.style.borderRadius = '4px'; phantom.style.display = 'flex'; phantom.style.justifyContent = 'center'; phantom.style.alignItems = 'center'; phantom.style.fontSize = '20px'; phantom.style.color = 'rgba(255,255,255,0.1)'; phantom.innerText = '+';
+                wire.appendChild(phantom);
+
+                row.appendChild(label);
+                row.appendChild(wire);
+                board.appendChild(row);
+            });
+        }
+
+        // --- Math Engine ---
+        function toBinaryString(num, length) {
+            return num.toString(2).padStart(length, '0');
+        }
+
+        function calculateMath() {
+            const combos = Math.pow(2, numQubits);
+            document.getElementById('stat-qubits').innerText = numQubits;
+            document.getElementById('stat-combinations').innerText = numQubits === 0 ? 0 : combos;
+
+            if (numQubits === 0) {
+                document.getElementById('chart').innerHTML = '<div style="color: var(--text-secondary); font-size: 13px; margin: auto;">Add qubits to view probability spaces.</div>';
+                return;
+            }
+
+            // Initialize state vector: |0...0> = 1.0, rest 0.0
+            let state = new Array(combos).fill(0);
+            state[0] = 1.0;
+
+            // Find max length of gates
+            let maxGates = 0;
+            circuit.forEach(g => { if (g.length > maxGates) maxGates = g.length });
+
+            // Apply gates timestep by timestep
+            for (let step = 0; step < maxGates; step++) {
+                // For each qubit, if it has a gate at this timestep, apply it
+                for (let q = 0; q < numQubits; q++) {
+                    if (step < circuit[q].length) {
+                        state = applyGateMatrix(state, circuit[q][step], q);
+                    }
+                }
+            }
+
+            renderChart(state, combos);
+        }
+
+        function applyGateMatrix(oldState, gate, targetQubit) {
+            const combos = oldState.length;
+            const newState = new Array(combos).fill(0);
+            // Big-endian mapping: Qubit 0 is the highest bit
+            const mask = 1 << ((numQubits - 1) - targetQubit);
+
+            if (gate === 'H') {
+                const s = 1.0 / Math.sqrt(2);
+                for (let i = 0; i < combos; i++) {
+                    if (Math.abs(oldState[i]) < 1e-10) continue;
+                    const bit = (i & mask) ? 1 : 0;
+                    const j0 = i & ~mask;
+                    const j1 = i | mask;
+                    if (bit === 0) {
+                        newState[j0] += s * oldState[i];
+                        newState[j1] += s * oldState[i];
+                    } else {
+                        newState[j0] += s * oldState[i];
+                        newState[j1] -= s * oldState[i];
+                    }
+                }
+            } else if (gate === 'X') {
+                for (let i = 0; i < combos; i++) {
+                    newState[i ^ mask] += oldState[i];
+                }
+            } else if (gate === 'Z') {
+                for (let i = 0; i < combos; i++) {
+                    if (i & mask) newState[i] -= oldState[i];
+                    else newState[i] += oldState[i];
+                }
+            }
+            return newState;
+        }
+
+        function renderChart(state, combos) {
+            const chart = document.getElementById('chart');
+            chart.innerHTML = '';
+
+            // max height based on amplitude bounding to 1.0
+            state.forEach((amp, i) => {
+                let pct = Math.abs(amp) * 100;
+                // Cap just in case
+                if (pct > 100) pct = 100;
+
+                const isPos = amp >= 0;
+                const isZero = Math.abs(amp) < 0.001;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'bar-wrapper';
+
+                // Bar height logic mapping strictly to top/bottom 50% lines.
+                // 100% amp = 50% height of track inside pos/neg region.
+                const hPct = isZero ? 0 : (pct / 2); // Divide by 2 because center is 0
+
+                let fillDiv = `<div class="bar-fill ${isPos ? 'pos' : 'neg'}" style="height: ${isZero ? 0 : pct / 2}%;"></div>`;
+
+                wrapper.innerHTML = `
+      <div style="font-size: 10px; color: var(--text-secondary); font-family: var(--font-mono); height: 12px;">${isZero ? '' : (amp >= 0 ? '+' : '-') + Math.abs(amp).toFixed(2)}</div>
+      <div class="bar-track">
+        <div class="bar-zero-line"></div>
+        ${fillDiv}
+      </div>
+      <div class="bar-label">|${toBinaryString(i, numQubits)}⟩</div>
+    `;
+                chart.appendChild(wrapper);
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -339,6 +339,38 @@
       opacity: 0.5
     }
   }
+
+  @media (max-width: 768px) {
+    .wrap {
+      padding: 0.5rem 0;
+    }
+
+    .stage-nav {
+      flex-wrap: wrap;
+      border-radius: 8px;
+    }
+
+    .snav-btn {
+      flex: 1 1 80px;
+      font-size: 11px;
+      padding: 8px 2px;
+    }
+
+    .stage-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .amp-table-wrap {
+      overflow-x: auto;
+    }
+
+    canvas {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+  }
 </style>
 
 <div class="wrap">
@@ -408,7 +440,8 @@
     <div class="stage-desc">This is the engine of <strong>Grover's Algorithm</strong>. A mathematical
       <strong>Oracle</strong> secretly flagged our target `|110⟩` by turning its amplitude negative. A diffusion
       operator then uses that negative amplitude as a mirror—causing wrong answers to cancel out (destructive
-      interference) while forcing `|110⟩` to rise and dominate (constructive interference).</div>
+      interference) while forcing `|110⟩` to rise and dominate (constructive interference).
+    </div>
     <div class="bars" id="bars-s3"></div>
     <div class="nav-btns"><button class="nav-btn" onclick="goStage(4)">Next: measure →</button></div>
   </div>

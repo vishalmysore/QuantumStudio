@@ -170,7 +170,7 @@ export default function SetupScreen({ onSave }) {
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Hands-on visualizers to master the fundamentals.</p>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                     {tutorials.map((t, idx) => (
                         <a
                             key={idx}

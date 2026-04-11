@@ -1,521 +1,563 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quantum Teleportation Visualizer - Quantum Studio</title>
 </head>
+
 <body>
 
-<style>
-  :root {
-    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-  }
-  
-  * { box-sizing: border-box; }
-  
-  body {
-    font-family: var(--font-sans);
-    background: #fafbfc;
-    margin: 0;
-    padding: 20px;
-    color: #1a1a1a;
-  }
-  
-  .visualizer { 
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 1rem 0;
-  }
-  
-  .header {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  
-  .header h1 {
-    font-size: 32px;
-    margin: 0 0 10px;
-    background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  
-  .header p {
-    font-size: 16px;
-    color: #6b7280;
-    margin: 0;
-  }
-  
-  .step-nav { 
-    display: flex; 
-    gap: 8px; 
-    flex-wrap: wrap; 
-    margin-bottom: 1.5rem; 
-    justify-content: center;
-  }
-  
-  .step-btn { 
-    padding: 8px 16px; 
-    font-size: 14px; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 6px; 
-    background: #ffffff; 
-    color: #6b7280; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-  }
-  
-  .step-btn.active { 
-    background: #534AB7; 
-    color: white; 
-    border-color: #534AB7; 
-    font-weight: 500; 
-  }
-  
-  .step-btn:hover:not(.active) { 
-    background: #f8f9fa; 
-  }
-  
-  .insight { 
-    background: #F0EDFF; 
-    border-left: 3px solid #534AB7; 
-    border-radius: 6px; 
-    padding: 16px 20px; 
-    margin-bottom: 1.5rem; 
-  }
-  
-  .insight .tag { 
-    font-size: 11px; 
-    font-weight: 600; 
-    color: #534AB7; 
-    margin-bottom: 6px; 
-    text-transform: uppercase; 
-    letter-spacing: 0.06em; 
-  }
-  
-  .insight p { 
-    margin: 0; 
-    font-size: 14px; 
-    line-height: 1.6; 
-  }
-  
-  .teleportation-visual {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .parties {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 40px;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
-  
-  .party {
-    text-align: center;
-  }
-  
-  .party-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: #534AB7;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  
-  .qubit-display {
-    background: linear-gradient(135deg, #F0EDFF 0%, #EEEDFE 100%);
-    border: 2px solid #AFA9EC;
-    border-radius: 12px;
-    padding: 20px;
-    min-height: 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .qubit-state {
-    font-size: 36px;
-    font-family: var(--font-mono);
-    color: #3C3489;
-    font-weight: 600;
-  }
-  
-  .qubit-label {
-    font-size: 12px;
-    color: #6b7280;
-    font-family: var(--font-mono);
-  }
-  
-  .channel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .channel-line {
-    width: 3px;
-    height: 60px;
-    background: linear-gradient(180deg, #534AB7 0%, #10b981 100%);
-    border-radius: 2px;
-    position: relative;
-  }
-  
-  .channel-line.active::after {
-    content: '⚡';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 20px;
-    animation: pulse 1.5s infinite;
-  }
-  
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-  
-  .channel-label {
-    font-size: 11px;
-    color: #9ca3af;
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-  
-  .measurement-box {
-    background: #FAECE7;
-    border: 2px solid #F0997B;
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-top: 12px;
-  }
-  
-  .measurement-box .label {
-    font-size: 10px;
-    color: #712B13;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  
-  .measurement-box .value {
-    font-size: 18px;
-    font-family: var(--font-mono);
-    color: #712B13;
-    font-weight: 600;
-  }
-  
-  .success-badge {
-    background: #E1F5EE;
-    border: 2px solid #5DCAA5;
-    color: #085041;
-    padding: 12px 24px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 14px;
-    display: inline-block;
-    margin-top: 12px;
-  }
-  
-  .card { 
-    background: #ffffff; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 8px; 
-    padding: 1.25rem 1.5rem; 
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    margin-bottom: 1.5rem;
-  }
-  
-  .card-title { 
-    font-size: 12px; 
-    color: #6b7280; 
-    margin: 0 0 16px; 
-    font-weight: 600; 
-    text-transform: uppercase; 
-    letter-spacing: 0.05em; 
-  }
-  
-  .protocol-step {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-    margin-bottom: 8px;
-  }
-  
-  .protocol-step .num {
-    width: 28px;
-    height: 28px;
-    background: #534AB7;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 13px;
-    flex-shrink: 0;
-  }
-  
-  .protocol-step.active {
-    background: #F0EDFF;
-    border: 1px solid #AFA9EC;
-  }
-  
-  .protocol-step.active .num {
-    background: #3C3489;
-  }
-  
-  .protocol-step .text {
-    font-size: 13px;
-    line-height: 1.5;
-  }
-  
-  .nav-btns { 
-    display: flex; 
-    gap: 10px; 
-    margin-top: 1.5rem; 
-    justify-content: center;
-  }
-  
-  .nav-btn { 
-    padding: 10px 24px; 
-    border: 1px solid #e5e7eb; 
-    border-radius: 6px; 
-    background: #ffffff; 
-    color: #1a1a1a; 
-    cursor: pointer; 
-    font-size: 14px; 
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-  
-  .nav-btn:hover:not(:disabled) { 
-    background: #f8f9fa; 
-  }
-  
-  .nav-btn:disabled { 
-    opacity: 0.4; 
-    cursor: not-allowed; 
-  }
-</style>
+  <style>
+    :root {
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    }
 
-<div class="visualizer">
-  <div class="header">
-    <h1>📡 Quantum Teleportation Visualizer</h1>
-    <p>Transferring quantum state using entanglement and classical communication</p>
-  </div>
+    * {
+      box-sizing: border-box;
+    }
 
-  <div class="step-nav" id="step-nav"></div>
+    body {
+      font-family: var(--font-sans);
+      background: #fafbfc;
+      margin: 0;
+      padding: 20px;
+      color: #1a1a1a;
+    }
 
-  <div class="insight" id="insight">
-    <div class="tag" id="insight-tag">Step 0</div>
-    <p id="insight-text">Loading...</p>
-  </div>
+    .visualizer {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 0;
+    }
 
-  <div class="teleportation-visual">
-    <div class="parties">
-      <div class="party">
-        <div class="party-name">👤 Alice (Sender)</div>
-        <div class="qubit-display">
-          <div class="qubit-state" id="alice-state">|ψ⟩</div>
-          <div class="qubit-label" id="alice-label">q[0]: Unknown state</div>
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      margin: 0 0 10px;
+      background: linear-gradient(135deg, #534AB7 0%, #8B5CF6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .step-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+
+    .step-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .step-btn.active {
+      background: #534AB7;
+      color: white;
+      border-color: #534AB7;
+      font-weight: 500;
+    }
+
+    .step-btn:hover:not(.active) {
+      background: #f8f9fa;
+    }
+
+    .insight {
+      background: #F0EDFF;
+      border-left: 3px solid #534AB7;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 1.5rem;
+    }
+
+    .insight .tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: #534AB7;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .insight p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .teleportation-visual {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .parties {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .party {
+      text-align: center;
+    }
+
+    .party-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #534AB7;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .qubit-display {
+      background: linear-gradient(135deg, #F0EDFF 0%, #EEEDFE 100%);
+      border: 2px solid #AFA9EC;
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .qubit-state {
+      font-size: 36px;
+      font-family: var(--font-mono);
+      color: #3C3489;
+      font-weight: 600;
+    }
+
+    .qubit-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-family: var(--font-mono);
+    }
+
+    .channel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .channel-line {
+      width: 3px;
+      height: 60px;
+      background: linear-gradient(180deg, #534AB7 0%, #10b981 100%);
+      border-radius: 2px;
+      position: relative;
+    }
+
+    .channel-line.active::after {
+      content: '⚡';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .channel-label {
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .measurement-box {
+      background: #FAECE7;
+      border: 2px solid #F0997B;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 12px;
+    }
+
+    .measurement-box .label {
+      font-size: 10px;
+      color: #712B13;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .measurement-box .value {
+      font-size: 18px;
+      font-family: var(--font-mono);
+      color: #712B13;
+      font-weight: 600;
+    }
+
+    .success-badge {
+      background: #E1F5EE;
+      border: 2px solid #5DCAA5;
+      color: #085041;
+      padding: 12px 24px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-block;
+      margin-top: 12px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 12px;
+      color: #6b7280;
+      margin: 0 0 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .protocol-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .protocol-step .num {
+      width: 28px;
+      height: 28px;
+      background: #534AB7;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .protocol-step.active {
+      background: #F0EDFF;
+      border: 1px solid #AFA9EC;
+    }
+
+    .protocol-step.active .num {
+      background: #3C3489;
+    }
+
+    .protocol-step .text {
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .nav-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+
+    .nav-btn {
+      padding: 10px 24px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1a1a1a;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: #f8f9fa;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 768px) {
+      .parties {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .channel {
+        flex-direction: row;
+        justify-content: center;
+      }
+
+      .channel-line {
+        width: 60px;
+        height: 3px;
+      }
+
+      .step-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+
+      .qubit-state {
+        font-size: 24px;
+      }
+
+      body {
+        padding: 12px;
+      }
+    }
+  </style>
+
+  <div class="visualizer">
+    <div class="header">
+      <h1>📡 Quantum Teleportation Visualizer</h1>
+      <p>Transferring quantum state using entanglement and classical communication</p>
+    </div>
+
+    <div class="step-nav" id="step-nav"></div>
+
+    <div class="insight" id="insight">
+      <div class="tag" id="insight-tag">Step 0</div>
+      <p id="insight-text">Loading...</p>
+    </div>
+
+    <div class="teleportation-visual">
+      <div class="parties">
+        <div class="party">
+          <div class="party-name">👤 Alice (Sender)</div>
+          <div class="qubit-display">
+            <div class="qubit-state" id="alice-state">|ψ⟩</div>
+            <div class="qubit-label" id="alice-label">q[0]: Unknown state</div>
+          </div>
+          <div id="alice-measurement"></div>
         </div>
-        <div id="alice-measurement"></div>
-      </div>
-      
-      <div class="channel">
-        <div class="channel-line" id="quantum-channel"></div>
-        <div class="channel-label" id="channel-label">Entanglement</div>
-      </div>
-      
-      <div class="party">
-        <div class="party-name">👤 Bob (Receiver)</div>
-        <div class="qubit-display">
-          <div class="qubit-state" id="bob-state">|0⟩</div>
-          <div class="qubit-label" id="bob-label">q[2]: Not ready</div>
+
+        <div class="channel">
+          <div class="channel-line" id="quantum-channel"></div>
+          <div class="channel-label" id="channel-label">Entanglement</div>
         </div>
-        <div id="bob-result"></div>
+
+        <div class="party">
+          <div class="party-name">👤 Bob (Receiver)</div>
+          <div class="qubit-display">
+            <div class="qubit-state" id="bob-state">|0⟩</div>
+            <div class="qubit-label" id="bob-label">q[2]: Not ready</div>
+          </div>
+          <div id="bob-result"></div>
+        </div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Protocol Steps</div>
+      <div id="protocol-steps"></div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Prev</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-title">Protocol Steps</div>
-    <div id="protocol-steps"></div>
-  </div>
+  <script>
+    const protocolSteps = [
+      'Alice and Bob share entangled qubits (Bell pair)',
+      'Alice performs Bell measurement on q[0] and q[1]',
+      'Alice sends 2 classical bits to Bob',
+      'Bob applies correction gates based on received bits',
+      'Bob now has the original state |ψ⟩'
+    ];
 
-  <div class="nav-btns">
-    <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">← Prev</button>
-    <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
-  </div>
-</div>
+    const steps = [
+      {
+        name: 'Setup',
+        tag: 'Step 1 — Initial Setup',
+        text: 'Alice has an unknown quantum state |ψ⟩ on q[0] that she wants to send to Bob. Bob has q[2] in state |0⟩. They also have a shared entangled pair on q[1] and q[2].',
+        aliceState: '|ψ⟩',
+        aliceLabel: 'q[0]: Unknown state to teleport',
+        bobState: '|0⟩',
+        bobLabel: 'q[2]: Waiting',
+        channelActive: true,
+        channelLabel: 'Shared Entanglement',
+        aliceMeasurement: '',
+        bobResult: '',
+        activeStep: 0
+      },
+      {
+        name: 'Entanglement',
+        tag: 'Step 2 — Create Bell Pair',
+        text: 'Alice applies H to q[1], then CNOT(q[1], q[2]). This creates a Bell pair (|00⟩+|11⟩)/√2 shared between Alice (q[1]) and Bob (q[2]). This is the entangled resource.',
+        aliceState: '|ψ⟩',
+        aliceLabel: 'q[0]: Still with Alice',
+        bobState: 'Entangled',
+        bobLabel: 'q[2]: Entangled with q[1]',
+        channelActive: true,
+        channelLabel: 'Bell Pair Created',
+        aliceMeasurement: '',
+        bobResult: '',
+        activeStep: 0
+      },
+      {
+        name: 'Bell Measure',
+        tag: 'Step 3 — Alice measures',
+        text: 'Alice performs Bell basis measurement on q[0] and q[1] by applying CNOT(q[0], q[1]), then H to q[0], then measuring both. This collapses the entanglement and destroys the original state on q[0].',
+        aliceState: '—',
+        aliceLabel: 'q[0]: Measured (collapsed)',
+        bobState: 'Modified',
+        bobLabel: 'q[2]: State encoded',
+        channelActive: false,
+        channelLabel: '',
+        aliceMeasurement: '<div class="measurement-box"><div class="label">Measurement Result</div><div class="value">00</div></div>',
+        bobResult: '',
+        activeStep: 1
+      },
+      {
+        name: 'Classical Comm',
+        tag: 'Step 4 — Classical Communication',
+        text: 'Alice sends her 2 classical measurement bits to Bob via regular communication (phone, internet, etc.). This is NOT faster than light—information travels classically.',
+        aliceState: '—',
+        aliceLabel: 'q[0]: Measured',
+        bobState: 'Encoded',
+        bobLabel: 'q[2]: Awaiting corrections',
+        channelActive: false,
+        channelLabel: 'Classical: 00',
+        aliceMeasurement: '<div class="measurement-box"><div class="label">Sent to Bob</div><div class="value">00</div></div>',
+        bobResult: '',
+        activeStep: 2
+      },
+      {
+        name: 'Corrections',
+        tag: 'Step 5 — Bob applies corrections',
+        text: 'Based on Alice\'s bits, Bob applies correction gates to q[2]. If bit 1 = 1, apply X. If bit 0 = 1, apply Z. This "undoes" the measurement effects and reconstructs |ψ⟩.',
+        aliceState: '—',
+        aliceLabel: 'q[0]: (original destroyed)',
+        bobState: '|ψ⟩',
+        bobLabel: 'q[2]: Corrected',
+        channelActive: false,
+        channelLabel: '',
+        aliceMeasurement: '<div class="measurement-box"><div class="label">Sent to Bob</div><div class="value">00</div></div>',
+        bobResult: '',
+        activeStep: 3
+      },
+      {
+        name: 'Complete',
+        tag: 'Step 6 — Teleportation Complete!',
+        text: 'Bob now has the original quantum state |ψ⟩ on q[2]. Alice\'s q[0] was destroyed during measurement. The state was "teleported" using entanglement + classical communication. No quantum information traveled through space!',
+        aliceState: '—',
+        aliceLabel: 'Original destroyed',
+        bobState: '|ψ⟩',
+        bobLabel: 'q[2]: Teleported!',
+        channelActive: false,
+        channelLabel: '',
+        aliceMeasurement: '<div class="measurement-box"><div class="label">Mission</div><div class="value">Complete</div></div>',
+        bobResult: '<div class="success-badge">✓ State Teleported Successfully</div>',
+        activeStep: 4
+      }
+    ];
 
-<script>
-const protocolSteps = [
-  'Alice and Bob share entangled qubits (Bell pair)',
-  'Alice performs Bell measurement on q[0] and q[1]',
-  'Alice sends 2 classical bits to Bob',
-  'Bob applies correction gates based on received bits',
-  'Bob now has the original state |ψ⟩'
-];
+    let current = 0;
 
-const steps = [
-  {
-    name: 'Setup',
-    tag: 'Step 1 — Initial Setup',
-    text: 'Alice has an unknown quantum state |ψ⟩ on q[0] that she wants to send to Bob. Bob has q[2] in state |0⟩. They also have a shared entangled pair on q[1] and q[2].',
-    aliceState: '|ψ⟩',
-    aliceLabel: 'q[0]: Unknown state to teleport',
-    bobState: '|0⟩',
-    bobLabel: 'q[2]: Waiting',
-    channelActive: true,
-    channelLabel: 'Shared Entanglement',
-    aliceMeasurement: '',
-    bobResult: '',
-    activeStep: 0
-  },
-  {
-    name: 'Entanglement',
-    tag: 'Step 2 — Create Bell Pair',
-    text: 'Alice applies H to q[1], then CNOT(q[1], q[2]). This creates a Bell pair (|00⟩+|11⟩)/√2 shared between Alice (q[1]) and Bob (q[2]). This is the entangled resource.',
-    aliceState: '|ψ⟩',
-    aliceLabel: 'q[0]: Still with Alice',
-    bobState: 'Entangled',
-    bobLabel: 'q[2]: Entangled with q[1]',
-    channelActive: true,
-    channelLabel: 'Bell Pair Created',
-    aliceMeasurement: '',
-    bobResult: '',
-    activeStep: 0
-  },
-  {
-    name: 'Bell Measure',
-    tag: 'Step 3 — Alice measures',
-    text: 'Alice performs Bell basis measurement on q[0] and q[1] by applying CNOT(q[0], q[1]), then H to q[0], then measuring both. This collapses the entanglement and destroys the original state on q[0].',
-    aliceState: '—',
-    aliceLabel: 'q[0]: Measured (collapsed)',
-    bobState: 'Modified',
-    bobLabel: 'q[2]: State encoded',
-    channelActive: false,
-    channelLabel: '',
-    aliceMeasurement: '<div class="measurement-box"><div class="label">Measurement Result</div><div class="value">00</div></div>',
-    bobResult: '',
-    activeStep: 1
-  },
-  {
-    name: 'Classical Comm',
-    tag: 'Step 4 — Classical Communication',
-    text: 'Alice sends her 2 classical measurement bits to Bob via regular communication (phone, internet, etc.). This is NOT faster than light—information travels classically.',
-    aliceState: '—',
-    aliceLabel: 'q[0]: Measured',
-    bobState: 'Encoded',
-    bobLabel: 'q[2]: Awaiting corrections',
-    channelActive: false,
-    channelLabel: 'Classical: 00',
-    aliceMeasurement: '<div class="measurement-box"><div class="label">Sent to Bob</div><div class="value">00</div></div>',
-    bobResult: '',
-    activeStep: 2
-  },
-  {
-    name: 'Corrections',
-    tag: 'Step 5 — Bob applies corrections',
-    text: 'Based on Alice\'s bits, Bob applies correction gates to q[2]. If bit 1 = 1, apply X. If bit 0 = 1, apply Z. This "undoes" the measurement effects and reconstructs |ψ⟩.',
-    aliceState: '—',
-    aliceLabel: 'q[0]: (original destroyed)',
-    bobState: '|ψ⟩',
-    bobLabel: 'q[2]: Corrected',
-    channelActive: false,
-    channelLabel: '',
-    aliceMeasurement: '<div class="measurement-box"><div class="label">Sent to Bob</div><div class="value">00</div></div>',
-    bobResult: '',
-    activeStep: 3
-  },
-  {
-    name: 'Complete',
-    tag: 'Step 6 — Teleportation Complete!',
-    text: 'Bob now has the original quantum state |ψ⟩ on q[2]. Alice\'s q[0] was destroyed during measurement. The state was "teleported" using entanglement + classical communication. No quantum information traveled through space!',
-    aliceState: '—',
-    aliceLabel: 'Original destroyed',
-    bobState: '|ψ⟩',
-    bobLabel: 'q[2]: Teleported!',
-    channelActive: false,
-    channelLabel: '',
-    aliceMeasurement: '<div class="measurement-box"><div class="label">Mission</div><div class="value">Complete</div></div>',
-    bobResult: '<div class="success-badge">✓ State Teleported Successfully</div>',
-    activeStep: 4
-  }
-];
+    function buildNav() {
+      const nav = document.getElementById('step-nav');
+      steps.forEach((s, i) => {
+        const b = document.createElement('button');
+        b.className = 'step-btn' + (i === 0 ? ' active' : '');
+        b.textContent = s.name;
+        b.onclick = () => goTo(i);
+        nav.appendChild(b);
+      });
+    }
 
-let current = 0;
+    function render() {
+      const s = steps[current];
+      document.getElementById('insight-tag').textContent = s.tag;
+      document.getElementById('insight-text').textContent = s.text;
 
-function buildNav() {
-  const nav = document.getElementById('step-nav');
-  steps.forEach((s, i) => {
-    const b = document.createElement('button');
-    b.className = 'step-btn' + (i === 0 ? ' active' : '');
-    b.textContent = s.name;
-    b.onclick = () => goTo(i);
-    nav.appendChild(b);
-  });
-}
+      document.querySelectorAll('.step-btn').forEach((b, i) => {
+        b.className = 'step-btn' + (i === current ? ' active' : '');
+      });
 
-function render() {
-  const s = steps[current];
-  document.getElementById('insight-tag').textContent = s.tag;
-  document.getElementById('insight-text').textContent = s.text;
+      document.getElementById('alice-state').textContent = s.aliceState;
+      document.getElementById('alice-label').textContent = s.aliceLabel;
+      document.getElementById('bob-state').textContent = s.bobState;
+      document.getElementById('bob-label').textContent = s.bobLabel;
+      document.getElementById('alice-measurement').innerHTML = s.aliceMeasurement;
+      document.getElementById('bob-result').innerHTML = s.bobResult;
 
-  document.querySelectorAll('.step-btn').forEach((b, i) => {
-    b.className = 'step-btn' + (i === current ? ' active' : '');
-  });
+      const channelEl = document.getElementById('quantum-channel');
+      channelEl.className = 'channel-line' + (s.channelActive ? ' active' : '');
+      document.getElementById('channel-label').textContent = s.channelLabel;
 
-  document.getElementById('alice-state').textContent = s.aliceState;
-  document.getElementById('alice-label').textContent = s.aliceLabel;
-  document.getElementById('bob-state').textContent = s.bobState;
-  document.getElementById('bob-label').textContent = s.bobLabel;
-  document.getElementById('alice-measurement').innerHTML = s.aliceMeasurement;
-  document.getElementById('bob-result').innerHTML = s.bobResult;
-  
-  const channelEl = document.getElementById('quantum-channel');
-  channelEl.className = 'channel-line' + (s.channelActive ? ' active' : '');
-  document.getElementById('channel-label').textContent = s.channelLabel;
-
-  // Protocol steps
-  const protocolDiv = document.getElementById('protocol-steps');
-  protocolDiv.innerHTML = '';
-  protocolSteps.forEach((step, i) => {
-    const isActive = i === s.activeStep;
-    protocolDiv.innerHTML += `
+      // Protocol steps
+      const protocolDiv = document.getElementById('protocol-steps');
+      protocolDiv.innerHTML = '';
+      protocolSteps.forEach((step, i) => {
+        const isActive = i === s.activeStep;
+        protocolDiv.innerHTML += `
       <div class="protocol-step ${isActive ? 'active' : ''}">
         <div class="num">${i + 1}</div>
         <div class="text">${step}</div>
       </div>`;
-  });
+      });
 
-  document.getElementById('prev-btn').disabled = current === 0;
-  document.getElementById('next-btn').disabled = current === steps.length - 1;
-}
+      document.getElementById('prev-btn').disabled = current === 0;
+      document.getElementById('next-btn').disabled = current === steps.length - 1;
+    }
 
-function goTo(i) { current = i; render(); }
-function navigate(dir) { current = Math.max(0, Math.min(steps.length - 1, current + dir)); render(); }
+    function goTo(i) { current = i; render(); }
+    function navigate(dir) { current = Math.max(0, Math.min(steps.length - 1, current + dir)); render(); }
 
-buildNav();
-render();
-</script>
+    buildNav();
+    render();
+  </script>
 
 </body>
+
 </html>

@@ -293,6 +293,41 @@
   .reset-btn:hover {
     background: var(--color-background-secondary);
   }
+
+  @media (max-width: 768px) {
+    .controls {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ctrl-group {
+      width: 100%;
+    }
+
+    .tabs {
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      flex: 1 1 auto;
+      text-align: center;
+    }
+
+    canvas {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    .bar-row {
+      gap: 4px;
+    }
+
+    .bar-val,
+    .prob-val {
+      min-width: 36px;
+      font-size: 11px;
+    }
+  }
 </style>
 
 <div class="container">
